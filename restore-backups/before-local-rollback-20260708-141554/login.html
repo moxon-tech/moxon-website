@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Đăng nhập quản trị - MOXON Tech</title>
+    <link rel="stylesheet" href="../assets/css/styles.css?v=20260708-admin-fast-catalog-v1">
+    <link rel="stylesheet" href="admin.css?v=20260708-admin-fast-catalog-v1">
+  </head>
+  <body class="admin-login-page">
+    <main class="admin-login-shell">
+      <section class="admin-login-panel">
+        <img src="../assets/logo-transparent.png?v=20260708-admin-fast-catalog-v1" alt="MOXON" class="admin-login-logo">
+        <p class="admin-kicker">MOXON CMS</p>
+        <h1>Đăng nhập quản trị</h1>
+        <p class="admin-muted">Đăng nhập bằng tài khoản admin đã tạo trong Supabase Auth.</p>
+
+        <form id="admin-login-form" class="admin-form">
+          <label>
+            Email admin
+            <input type="email" name="email" autocomplete="username" placeholder="admin@moxontech.vn" required>
+          </label>
+          <label>
+            Mật khẩu
+            <input type="password" name="password" autocomplete="current-password" placeholder="Mật khẩu Supabase Auth" required>
+          </label>
+          <p class="admin-form-status" data-login-status aria-live="polite"></p>
+          <button type="submit" class="admin-primary-btn">Đăng nhập</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../data/supabase-config.js?v=20260708-admin-fast-catalog-v1"></script>
+    <script src="../data/supabase-client.js?v=20260708-admin-fast-catalog-v1"></script>
+    <script>
+      document.getElementById("admin-login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const status = document.querySelector("[data-login-status]");
+        const client = window.MOXON_SUPABASE_CLIENT;
+        const email = new FormData(form).get("email");
+        const password = new FormData(form).get("password");
+
+        if (!client) {
+          status.textContent = "Chưa cấu hình được Supabase client.";
+          return;
+        }
+
+        status.textContent = "Đang đăng nhập...";
+        const { data, error } = await client.auth.signInWithPassword({ email, password });
+        if (!error && data?.session) {
+          window.location.href = "dashboard.html";
+          return;
+        }
+
+        status.textContent = error?.message || "Không đăng nhập được tài khoản admin.";
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+# Source artwork and unoptimized images are kept locally only.
+# The public website uses assets/optimized/*.jpg and assets/logo-transparent.png.
+assets/Saved Pictures/
+assets/moxon-banner.png
+assets/product-*.png
+assets/project-*.png
+assets/service-*.png
+
