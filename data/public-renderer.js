@@ -733,8 +733,6 @@
     document.body?.removeAttribute("data-cms-loading");
   };
 
-  finishRender(window.MOXON_DATA || data);
-
   if (window.MOXON_SUPABASE_DATA_READY) {
     window.MOXON_SUPABASE_DATA_READY
       .then((nextData) => {
@@ -742,6 +740,9 @@
       })
       .catch((error) => {
         console.warn("Khong cap nhat duoc du lieu Supabase, hien thi du lieu fallback.", error);
+        finishRender(window.MOXON_DATA || data);
       });
+  } else {
+    finishRender(window.MOXON_DATA || data);
   }
 })();
