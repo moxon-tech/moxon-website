@@ -87,6 +87,12 @@
   };
 
   const quoteHref = (title) => `contact.html?quote=${encodeURIComponent(text(title))}#quote`;
+  const getDataState = () => window.MOXON_SUPABASE_DATA_STATE || "static";
+  const isDataLoading = () => getDataState() === "loading";
+  const emptyProductMessage = () =>
+    isDataLoading()
+      ? "Dang tai danh sach san pham tu he thong..."
+      : "Chua tai duoc danh sach san pham. Vui long lien he MOXON de duoc tu van.";
   const isExternalUrl = (url) => /^https?:\/\//i.test(text(url).trim());
   const newsHref = (item) => {
     const url = text(item.url).trim();
@@ -184,8 +190,6 @@
     const menu = document.querySelector(".catalog-category-menu");
     if (!menu) return;
 
-    if (!categories.length) return;
-
     menu.innerHTML = `
       <button class="catalog-category-btn is-active" type="button" data-catalog-filter="all">T&#7845;t c&#7843; s&#7843;n ph&#7849;m</button>
       ${categories
@@ -200,8 +204,6 @@
   const renderHomeProductSidebarMenu = () => {
     const menu = document.querySelector(".home-sidebar .sidebar-widget .sidebar-menu-list");
     if (!menu) return;
-
-    if (!categories.length) return;
 
     menu.innerHTML = `
       <li><a href="products.html">T&#7845;t c&#7843; s&#7843;n ph&#7849;m</a></li>
@@ -249,9 +251,20 @@
 
     renderProductCatalogMenu();
     if (!products.length) {
+      grid.innerHTML = "";
+      const empty = document.querySelector("[data-product-empty]");
+      if (empty) {
+        empty.textContent = emptyProductMessage();
+        empty.classList.add("is-visible");
+      }
       return;
     }
 
+    const empty = document.querySelector("[data-product-empty]");
+    if (empty) {
+      empty.textContent = "Khong tim thay san pham phu hop.";
+      empty.classList.remove("is-visible");
+    }
     grid.innerHTML = products.map(renderCatalogProductCard).join("");
   };
 
@@ -269,8 +282,6 @@
   `;
 
   const renderHomeProductRows = () => {
-    if (!categories.length || !products.length) return;
-
     const mainContent = document.querySelector(".home-main-content");
     const newsGrid = document.querySelector(".home-news-contact-grid");
     if (!mainContent || !newsGrid) return;
@@ -282,6 +293,21 @@
       }
       row.remove();
     });
+
+    mainContent.querySelectorAll("[data-product-loading-row]").forEach((row) => row.remove());
+
+    if (!categories.length || !products.length) {
+      newsGrid.insertAdjacentHTML(
+        "beforebegin",
+        `
+          <div class="product-row-wrap" data-product-loading-row>
+            <div class="product-row-header"><h3>S&#7843;n ph&#7849;m</h3><a href="contact.html#quote" class="view-all-link">Li&#234;n h&#7879; t&#432; v&#7845;n &#8250;</a></div>
+            <div class="catalog-empty is-visible">${escapeHtml(emptyProductMessage())}</div>
+          </div>
+        `
+      );
+      return;
+    }
 
     const rows = categories
       .map((category) => {
@@ -701,7 +727,7 @@
     const nextData = window.MOXON_DATA || data || {};
     let signature = "";
     try {
-      signature = JSON.stringify(nextData);
+      signature = `${getDataState()}:${JSON.stringify(nextData)}`;
     } catch {
       signature = String(Date.now());
     }

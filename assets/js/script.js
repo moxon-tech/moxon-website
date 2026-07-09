@@ -221,6 +221,15 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => targetInput.setCustomValidity(""), 1000);
     }
   };
+  const showFormSuccess = (form, message) => {
+    const formStatus = form.querySelector("[data-form-status]");
+    if (formStatus) {
+      formStatus.textContent = message;
+      formStatus.style.display = "block";
+      formStatus.className = "form-status success";
+      formStatus.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   document.querySelectorAll("input[type='tel']").forEach((input) => {
     input.addEventListener("input", () => {
@@ -253,51 +262,70 @@ document.addEventListener("DOMContentLoaded", () => {
   // Double check submit state
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", async (event) => {
-      if (form.dataset.nativeSubmit === "true") return;
       const phoneInput = form.querySelector("input[type='tel']");
       const emailInput = form.querySelector("input[type='email']");
+      const isManagedForm = form.matches("#quote") || form.matches("#apply-form");
+      const button = form.querySelector("button[type='submit']");
+      const originalButtonText = button?.textContent || "";
+      const phoneValue = phoneInput?.value.trim() || "";
+      const emailValue = emailInput?.value.trim() || "";
 
-      if (phoneInput && !isValidVietnamPhone(phoneInput.value)) {
+      if (isManagedForm && !phoneValue && !emailValue) {
+        event.preventDefault();
+        showFormError(form, "Vui lòng nhập số điện thoại hoặc email để MOXON liên hệ lại.", phoneInput || emailInput);
+        return;
+      }
+
+      if (phoneInput && phoneValue && !isValidVietnamPhone(phoneValue)) {
         event.preventDefault();
         showFormError(form, "Vui l\u00f2ng nh\u1eadp s\u1ed1 \u0111i\u1ec7n tho\u1ea1i Vi\u1ec7t Nam h\u1ee3p l\u1ec7.", phoneInput);
         return;
       }
 
-      if (emailInput && emailInput.value.trim() && !isValidEmail(emailInput.value)) {
+      if (emailInput && emailValue && !isValidEmail(emailValue)) {
         event.preventDefault();
         showFormError(form, "Vui l\u00f2ng nh\u1eadp email \u0111\u00fang \u0111\u1ecbnh d\u1ea1ng.", emailInput);
         return;
       }
 
-      if (form.matches("#quote")) {
+      if (isManagedForm) {
         event.preventDefault();
+        form.classList.add("is-submitting");
+        if (button) {
+          button.textContent = "\u0110ang g\u1eedi...";
+          button.setAttribute("disabled", "true");
+        }
         try {
-          await saveManagedMessage(form, "contact");
+          await saveManagedMessage(form, form.matches("#apply-form") ? "application" : "contact");
         } catch (error) {
-          event.preventDefault();
+          if (button) {
+            button.textContent = originalButtonText || "G\u1eedi";
+            button.removeAttribute("disabled");
+          }
+          form.classList.remove("is-submitting");
           showFormError(form, error.message || "Kh\u00f4ng l\u01b0u \u0111\u01b0\u1ee3c t\u1ec7p \u0111\u00ednh k\u00e8m.", form.querySelector("input[type='file']"));
           return;
         }
-      } else if (form.matches("#apply-form")) {
-        event.preventDefault();
-        try {
-          await saveManagedMessage(form, "application");
-        } catch (error) {
-          event.preventDefault();
-          showFormError(form, error.message || "Kh\u00f4ng l\u01b0u \u0111\u01b0\u1ee3c t\u1ec7p \u0111\u00ednh k\u00e8m.", form.querySelector("input[type='file']"));
-          return;
+
+        if (button) {
+          button.textContent = "\u0110\u00e3 g\u1eedi";
+          button.setAttribute("disabled", "true");
         }
-      }
-
-      const button = form.querySelector("button[type='submit']");
-      if (button) {
-        button.textContent = "\u0110ang g\u1eedi...";
-        button.setAttribute("disabled", "true");
-      }
-
-      if (form.matches("#quote") || form.matches("#apply-form")) {
-        form.dataset.nativeSubmit = "true";
-        form.submit();
+        showFormSuccess(
+          form,
+          form.matches("#apply-form")
+            ? "MOXON \u0111\u00e3 ti\u1ebfp nh\u1eadn th\u00f4ng tin \u1ee9ng tuy\u1ec3n c\u1ee7a b\u1ea1n."
+            : "C\u1ea3m \u01a1n b\u1ea1n. MOXON \u0111\u00e3 ti\u1ebfp nh\u1eadn th\u00f4ng tin li\u00ean h\u1ec7 t\u01b0 v\u1ea5n."
+        );
+        form.reset();
+        setTimeout(() => {
+          if (button) {
+            button.textContent = originalButtonText || "G\u1eedi";
+            button.removeAttribute("disabled");
+          }
+          form.classList.remove("is-submitting");
+        }, 1800);
+        return;
       }
     });
   });
@@ -578,6 +606,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isVisible) visibleCount += 1;
       });
 
+      let visibleIndex = 0;
+      cards.forEach((card) => {
+        if (card.hidden || card.classList.contains("is-hidden")) return;
+        card.style.setProperty("--product-motion-index", String(visibleIndex));
+        card.classList.remove("is-filter-animated");
+        window.requestAnimationFrame(() => card.classList.add("is-filter-animated"));
+        visibleIndex += 1;
+      });
+
       if (heading) {
         const activeButton = buttons.find((button) => (button.dataset.catalogFilter || "all") === activeCategory);
         heading.textContent = categoryLabels[activeCategory] || activeButton?.textContent?.trim() || "Tất cả sản phẩm";
@@ -856,6 +893,99 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-count-to]").forEach((el) => {
     counterObserver.observe(el);
   });
+
+  const animateCompactNumber = (el) => {
+    if (!el || el.dataset.countAnimated === "true") return;
+    const raw = (el.dataset.countTo || el.textContent || "").trim();
+    const match = raw.match(/^(\D*)(\d+)(\D*)$/);
+    if (!match) return;
+
+    el.dataset.countAnimated = "true";
+    const [, prefix, digits, suffix] = match;
+    const target = Number(digits);
+    const width = digits.length;
+    if (!Number.isFinite(target) || target <= 0 || target > 9999) return;
+
+    const duration = Math.min(760, Math.max(360, target * 80));
+    const start = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.round(target * eased);
+      el.textContent = `${prefix}${String(value).padStart(width, "0")}${suffix}`;
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const initTechnicalSequenceMotion = () => {
+    document.querySelectorAll("body[data-page='about'] .about-process-list").forEach((list) => {
+      list.classList.add("is-motion-ready");
+    });
+
+    const sequenceItems = [
+      ...document.querySelectorAll("body[data-page='about'] .about-value-card"),
+      ...document.querySelectorAll("body[data-page='about'] .about-capability-card"),
+      ...document.querySelectorAll("body[data-page='about'] .about-process-list article"),
+      ...document.querySelectorAll("body[data-page='about'] .about-company-list > div"),
+      ...document.querySelectorAll(".metric-card")
+    ];
+
+    sequenceItems.forEach((item, index) => {
+      if (item.dataset.motionReady === "true") return;
+      item.dataset.motionReady = "true";
+      item.classList.add("moxon-sequence-item");
+      item.style.setProperty("--sequence-delay", `${Math.min(index * 55, 420)}ms`);
+    });
+
+    const sequenceObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          entry.target.closest(".about-process-list")?.classList.add("is-motion-active");
+          sequenceObserver.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -36px 0px" }
+    );
+
+    sequenceItems.forEach((item) => {
+      if (item.dataset.sequenceObserveReady === "true") return;
+      item.dataset.sequenceObserveReady = "true";
+      sequenceObserver.observe(item);
+    });
+
+    const animatedNumbers = document.querySelectorAll(
+      [
+        ".metric-number:not([data-count-to])",
+        "body[data-page='about'] .about-card-icon",
+        "body[data-page='about'] .about-card-top > span",
+        "body[data-page='about'] .about-step-number",
+        "body[data-page='about'] .about-company-number"
+      ].join(",")
+    );
+
+    const numberObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          animateCompactNumber(entry.target);
+          numberObserver.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.45 }
+    );
+
+    animatedNumbers.forEach((el) => {
+      if (el.dataset.countObserveReady === "true") return;
+      el.dataset.countObserveReady = "true";
+      numberObserver.observe(el);
+    });
+  };
+
+  initTechnicalSequenceMotion();
+  document.addEventListener("moxon:content-rendered", initTechnicalSequenceMotion);
 
   const initHomeProductAutoScroll = () => {
     if (!isHomePage) return;

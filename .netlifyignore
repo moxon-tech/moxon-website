@@ -6,3 +6,10 @@ assets/product-*.png
 assets/project-*.png
 assets/service-*.png
 
+# Local-only development and handover materials.
+restore-backups/
+tools/
+.agents/
+.git/
+supabase-cms-schema.sql
+HANDOVER.md

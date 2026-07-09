@@ -1,5 +1,6 @@
 (function loadMoxonSupabaseRuntime() {
   const client = window.MOXON_SUPABASE_CLIENT;
+  window.MOXON_SUPABASE_DATA_STATE = client ? "loading" : "unavailable";
   const isPlainObject = (value) => value && typeof value === "object" && !Array.isArray(value);
   const deepMerge = (target, source) => {
     if (Array.isArray(target) && Array.isArray(source)) return source;
@@ -50,6 +51,7 @@
   window.MOXON_SUPABASE_DATA_READY = (async () => {
     if (!client) {
       console.warn("Supabase client chua san sang, dung du lieu fallback.");
+      window.MOXON_SUPABASE_DATA_STATE = "unavailable";
       return window.MOXON_DATA || {};
     }
 
@@ -82,9 +84,11 @@
     }
 
     window.MOXON_DATA = nextData;
+    window.MOXON_SUPABASE_DATA_STATE = "ready";
     return window.MOXON_DATA;
   })().catch((error) => {
     console.warn("Khong tai duoc du lieu Supabase, dung du lieu fallback.", error);
+    window.MOXON_SUPABASE_DATA_STATE = "error";
     return window.MOXON_DATA || {};
   });
 })();

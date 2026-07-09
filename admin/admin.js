@@ -119,10 +119,6 @@
     }
     return source === undefined ? target : source;
   };
-  const originalCatalogData = {
-    productCategories: deepClone(window.MOXON_DATA?.productCategories || []),
-    products: deepClone(window.MOXON_DATA?.products || [])
-  };
   const useClassicLocalAdmin = false;
   const LOCAL_DATA_KEY = "moxon_admin_data";
   const LOCAL_LOGS_KEY = "moxon_admin_logs";
@@ -498,44 +494,6 @@
     return nextRecords;
   };
 
-  const restoreOriginalCatalogData = async () => {
-    const fallbackCategories = deepClone(originalCatalogData.productCategories || []);
-    const fallbackProducts = deepClone(originalCatalogData.products || []);
-    if (!fallbackCategories.length || !fallbackProducts.length) {
-      throw new Error("Không tìm thấy dữ liệu mẫu cũ trong site-data.js.");
-    }
-
-    const normalizedCategories = normalizeUniqueIds(fallbackCategories, "category").records
-      .map((category, index) => ({
-        ...category,
-        sortOrder: Number(category.sortOrder) || index + 1,
-        active: category.active !== false
-      }));
-    const categoryIds = new Set(normalizedCategories.map((category) => category.id));
-    const firstCategoryId = normalizedCategories[0]?.id || "";
-    const normalizedProducts = normalizeUniqueIds(fallbackProducts, "product").records
-      .map((product, index) => ({
-        ...product,
-        category: categoryIds.has(product.category) ? product.category : firstCategoryId,
-        sortOrder: Number(product.sortOrder) || index + 1,
-        active: product.active !== false,
-        featured: product.featured !== false
-      }));
-
-    await saveSectionData("productCategories", normalizedCategories, {
-      action: "Khôi phục",
-      target: "Danh mục",
-      detail: "Dữ liệu mẫu cũ"
-    });
-    await saveSectionData("products", normalizedProducts, {
-      action: "Khôi phục",
-      target: "Sản phẩm",
-      detail: "Dữ liệu mẫu cũ"
-    });
-    data = { ...getData(), productCategories: normalizedCategories, products: normalizedProducts };
-    return data;
-  };
-
 
   const getAuthDisplayName = () => {
     const emailName = String(currentAuthUser?.email || "")
@@ -847,7 +805,13 @@
       const filterValue = filterSelect?.value || "";
       const rows = Array.from(container.querySelectorAll(`${tableSelector} tbody tr`));
       
-      if (rows.length === 0 || rows[0].querySelector(".admin-empty-note")) return;
+      if (rows.length === 0 || rows[0].querySelector(".admin-empty-note")) {
+        if (paginationContainer) {
+          paginationContainer.innerHTML = "";
+          paginationContainer.hidden = true;
+        }
+        return;
+      }
 
       const visibleRows = rows.filter(row => {
         const text = row.textContent.toLowerCase();
@@ -871,6 +835,12 @@
       visibleRows.slice(start, end).forEach(row => row.style.display = "");
 
       if (paginationContainer) {
+        if (totalPages <= 1) {
+          paginationContainer.innerHTML = "";
+          paginationContainer.hidden = true;
+          return;
+        }
+        paginationContainer.hidden = false;
         let html = `<button class="admin-pagination-btn prev-btn" ${page === 1 ? 'disabled' : ''}>&lt;</button>`;
         for (let i = 1; i <= totalPages; i++) {
           html += `<button class="admin-pagination-btn page-num-btn ${i === page ? 'is-active' : ''}" data-page="${i}">${i}</button>`;
@@ -1453,7 +1423,6 @@
           ]
         },
         { key: "image", label: "Ảnh banner (3:1)", input: "image", aspect: "3:1" },
-        { key: "alt", label: "Mô tả ảnh / Alt text" },
         { key: "sortOrder", label: "Thứ tự", type: "number" },
         { key: "active", label: "Hiển thị banner", input: "checkbox" }
       ]
@@ -2162,10 +2131,7 @@
               ${
                 group === "heroImages" || group === "capabilities"
                   ? `
-                    <label>
-                      Mô tả ảnh
-                      <input type="text" data-repeat-field="${group}" data-repeat-key="alt" value="${escapeHtml(item.alt || "")}">
-                    </label>
+                    <input type="hidden" data-repeat-field="${group}" data-repeat-key="alt" value="${escapeHtml(item.alt || "")}">
                     <label class="admin-field-wide admin-image-picker" data-image-aspect="4:3">
                       Ảnh hiển thị
                       <div class="admin-image-picker-row">
@@ -2580,11 +2546,7 @@
         </div>
       </div>
 
-      <div class="admin-pagination">
-        <button class="admin-pagination-btn" disabled>&lt;</button>
-        <button class="admin-pagination-btn is-active">1</button>
-        <button class="admin-pagination-btn">&gt;</button>
-      </div>
+      <div class="admin-pagination" hidden></div>
 
       <p class="admin-form-status" data-editor-status aria-live="polite"></p>
     `;
@@ -2929,11 +2891,7 @@
         </div>
       </div>
 
-      <div class="admin-pagination">
-        <button class="admin-pagination-btn" disabled>&lt;</button>
-        <button class="admin-pagination-btn is-active">1</button>
-        <button class="admin-pagination-btn">&gt;</button>
-      </div>
+      <div class="admin-pagination" hidden></div>
 
       <p class="admin-form-status" data-editor-status aria-live="polite"></p>
     `;
@@ -3017,7 +2975,6 @@
           <p class="admin-muted">Thêm, sửa, ẩn/hiện và sắp xếp sản phẩm. Bố cục dạng bảng giúp quản trị trực quan hơn.</p>
         </div>
         <div class="admin-actions">
-          <button class="admin-secondary-btn" type="button" data-restore-catalog>Khôi phục dữ liệu mẫu</button>
           <button class="admin-primary-btn" type="button" data-add-product>+ Thêm sản phẩm</button>
         </div>
       </div>
@@ -3087,12 +3044,7 @@
         </div>
       </div>
 
-      <div class="admin-pagination">
-        <button class="admin-pagination-btn" disabled>&lt;</button>
-        <button class="admin-pagination-btn is-active">1</button>
-        <button class="admin-pagination-btn">2</button>
-        <button class="admin-pagination-btn">&gt;</button>
-      </div>
+      <div class="admin-pagination" hidden></div>
 
       <p class="admin-form-status" data-editor-status aria-live="polite"></p>
     `;
@@ -3288,11 +3240,7 @@
         </div>
       </div>
 
-      <div class="admin-pagination">
-        <button class="admin-pagination-btn" disabled>&lt;</button>
-        <button class="admin-pagination-btn is-active">1</button>
-        <button class="admin-pagination-btn">&gt;</button>
-      </div>
+      <div class="admin-pagination" hidden></div>
 
       <p class="admin-form-status" data-editor-status aria-live="polite"></p>
     `;
@@ -3659,6 +3607,76 @@
   };
   const renderSupabaseStatusCard = () => {
     const errors = supabaseLoadStatus.errors || [];
+    return "";
+    const trackedStatuses = [
+      supabaseLoadStatus.publicSnapshot,
+      supabaseLoadStatus.authenticated,
+      supabaseLoadStatus.contacts,
+      supabaseLoadStatus.logs
+    ];
+    const hasError = trackedStatuses.includes("error");
+    const isLoading = trackedStatuses.includes("pending");
+    const statusTitle = hasError
+      ? "Hệ thống cần kiểm tra"
+      : isLoading
+        ? "Đang đồng bộ dữ liệu"
+        : "Hệ thống hoạt động bình thường";
+    const statusNote = hasError
+      ? "Một số dữ liệu chưa tải được. Hãy thử tải lại trang hoặc liên hệ người quản trị kỹ thuật."
+      : isLoading
+        ? "Admin đang lấy dữ liệu mới nhất từ Supabase."
+        : `Đã nạp ${countItems("productCategories")} danh mục, ${countItems("products")} sản phẩm, ${supabaseLoadStatus.contactRows} liên hệ.`;
+    return `
+      <section class="admin-dashboard-card admin-dashboard-card-wide">
+        <div class="admin-card-head">
+          <h3>Trạng thái hệ thống</h3>
+          <span class="admin-muted">${escapeHtml(supabaseLoadStatus.lastUpdated || "Đang kiểm tra...")}</span>
+        </div>
+        <div style="display: grid; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            ${renderSupabaseLoadBadge(hasError ? "error" : isLoading ? "pending" : "ok")}
+            <strong style="color: var(--text-main);">${escapeHtml(statusTitle)}</strong>
+          </div>
+          <p class="admin-muted" style="margin: 0;">${escapeHtml(statusNote)}</p>
+          <details style="margin-top: 4px;">
+            <summary class="admin-muted" style="cursor: pointer; font-weight: 700;">Chi tiết kỹ thuật</summary>
+            <div style="display: grid; gap: 10px; margin-top: 10px;">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <span>Public snapshot: ${renderSupabaseLoadBadge(supabaseLoadStatus.publicSnapshot)}</span>
+                <span>Authenticated: ${renderSupabaseLoadBadge(supabaseLoadStatus.authenticated)}</span>
+                <span>Liên hệ: ${renderSupabaseLoadBadge(supabaseLoadStatus.contacts)}</span>
+                <span>Nhật ký: ${renderSupabaseLoadBadge(supabaseLoadStatus.logs)}</span>
+              </div>
+              <p class="admin-muted" style="margin: 0;">
+                Đã nạp: ${countItems("productCategories")} danh mục, ${countItems("products")} sản phẩm,
+                ${supabaseLoadStatus.cmsSections || remoteCmsSectionKeys.size} CMS section,
+                ${supabaseLoadStatus.contactRows} liên hệ, ${supabaseLoadStatus.logRows} nhật ký.
+              </p>
+              <p class="admin-muted" style="margin: 0;">
+                Project: ${escapeHtml(String(supabaseConfig.url || "").replace(/\/+$/, ""))} | Admin: ${escapeHtml(currentAuthUser?.email || "không rõ")}
+                | Bảng đọc: contact_messages, admin_activity_logs.
+              </p>
+              <p class="admin-muted" style="margin: 0;">
+                JWT role: ${escapeHtml(supabaseLoadStatus.jwtRole || "chưa rõ")} | User ID: ${escapeHtml(supabaseLoadStatus.userId || currentAuthUser?.id || "chưa rõ")}
+              </p>
+              <p class="admin-muted" style="margin: 0;">
+                Nguồn private: Liên hệ ${escapeHtml(supabaseLoadStatus.contactSource || "chưa có")} |
+                Nhật ký ${escapeHtml(supabaseLoadStatus.logSource || "chưa có")}
+              </p>
+              ${
+                errors.length
+                  ? `<p class="admin-empty-note" style="margin: 0;">Lỗi gần nhất: ${escapeHtml(errors.join(" | "))}</p>`
+                  : `<p class="admin-empty-note" style="margin: 0;">${
+                      supabaseLoadStatus.contacts === "empty" || supabaseLoadStatus.logs === "empty"
+                        ? "Nếu Supabase Table Editor có dữ liệu nhưng admin vẫn 0 rows, hãy kiểm tra RLS policy SELECT cho role authenticated."
+                        : "Không ghi nhận lỗi tải dữ liệu trong phiên này."
+                    }</p>`
+              }
+            </div>
+          </details>
+        </div>
+      </section>
+    `;
     return `
       <section class="admin-dashboard-card admin-dashboard-card-wide">
         <div class="admin-card-head">
@@ -3914,7 +3932,7 @@
                       }
                     </span>
                     <span class="admin-contact-badge is-${contact.seen ? "seen" : "unseen"}">
-                      ${contact.seen ? "✓ Đã xem" : "â€¢ Chưa xem"}
+                      ${contact.seen ? "✓ Đã xem" : "Chưa xem"}
                     </span>
                   </div>
                 </div>
@@ -4045,8 +4063,6 @@
     };
     editor.innerHTML = `
       <div class="admin-dashboard-layout">
-        ${renderSupabaseStatusCard()}
-
         <section class="admin-dashboard-card admin-dashboard-card-contact">
           <div class="admin-card-head">
             <h3>Liên hệ mới nhất</h3>
@@ -4396,10 +4412,7 @@
         const imageControls =
           group === "heroImages" || group === "capabilities"
             ? `
-              <label>
-                Mô tả ảnh
-                <input type="text" data-repeat-field="${group}" data-repeat-key="alt" value="">
-              </label>
+              <input type="hidden" data-repeat-field="${group}" data-repeat-key="alt" value="">
               <label class="admin-field-wide admin-image-picker" data-image-aspect="4:3">
                 Ảnh hiển thị
                 <div class="admin-image-picker-row">
@@ -4566,29 +4579,6 @@
       };
     }
 
-    const restoreCatalogBtn = editor.querySelector("[data-restore-catalog]");
-    if (restoreCatalogBtn) restoreCatalogBtn.onclick = async () => {
-      const ok = confirm("Khôi phục lại danh mục và sản phẩm mẫu cũ? Dữ liệu danh mục/sản phẩm hiện tại trên Supabase sẽ được thay bằng bộ mẫu này.");
-      if (!ok) return;
-      restoreCatalogBtn.disabled = true;
-      const oldText = restoreCatalogBtn.textContent;
-      restoreCatalogBtn.textContent = "Đang khôi phục...";
-      try {
-        await restoreOriginalCatalogData();
-        renderSummary();
-        renderProductEditor(section);
-        wireEditorActions(section);
-    showToast("Đã khôi phục danh mục và sản phẩm mẫu cũ lên Supabase.", "success");
-      } catch (error) {
-        showToast(error.message || "Không khôi phục được dữ liệu mẫu.", "error");
-      } finally {
-        if (document.body.contains(restoreCatalogBtn)) {
-          restoreCatalogBtn.disabled = false;
-          restoreCatalogBtn.textContent = oldText;
-        }
-      }
-    };
-
     const addProductBtn = editor.querySelector("[data-add-product]");
     if (addProductBtn) addProductBtn.onclick = () => {
       renderProductEditor(section, "__new__");
@@ -4751,8 +4741,8 @@
     if (headingHost && section.type === "dashboard") {
       headingHost.classList.add("is-dashboard-welcome");
       headingHost.innerHTML = `
-        <h1>Xin chào, ${escapeHtml(currentName)}</h1>
-        <p>Vai trò hiện tại: ${escapeHtml(currentRole)}. Các số liệu bên dưới được lấy từ dữ liệu website đang lưu trong admin.</p>
+        <h1>Xin chào, ${escapeHtml(currentName)} 👋</h1>
+        <p>Vai trò hiện tại: ${escapeHtml(currentRole)}.</p>
       `;
     } else if (headingHost) {
       headingHost.classList.remove("is-dashboard-welcome");
