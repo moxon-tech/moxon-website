@@ -91,8 +91,8 @@
   const isDataLoading = () => getDataState() === "loading";
   const emptyProductMessage = () =>
     isDataLoading()
-      ? "Dang tai danh sach san pham tu he thong..."
-      : "Chua tai duoc danh sach san pham. Vui long lien he MOXON de duoc tu van.";
+      ? "Đang tải danh sách sản phẩm từ hệ thống..."
+      : "Chưa tải được danh sách sản phẩm. Vui lòng liên hệ MOXON để được tư vấn.";
   const isExternalUrl = (url) => /^https?:\/\//i.test(text(url).trim());
   const newsHref = (item) => {
     const url = text(item.url).trim();
@@ -262,7 +262,7 @@
 
     const empty = document.querySelector("[data-product-empty]");
     if (empty) {
-      empty.textContent = "Khong tim thay san pham phu hop.";
+      empty.textContent = "Không tìm thấy sản phẩm phù hợp.";
       empty.classList.remove("is-visible");
     }
     grid.innerHTML = products.map(renderCatalogProductCard).join("");
@@ -559,15 +559,25 @@
     if (!panel || !data.company) return;
 
     const company = data.company;
+    const contactIcon = {
+      phone: `<svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.35 1.9.66 2.81a2 2 0 0 1-.45 2.11L8.05 9.91a16 16 0 0 0 6.04 6.04l1.27-1.27a2 2 0 0 1 2.11-.45c.91.31 1.85.53 2.81.66A2 2 0 0 1 22 16.92z"/></svg>`,
+      mail: `<svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm16 4-8 5L4 8"/></svg>`,
+      globe: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+      pin: `<svg viewBox="0 0 24 24"><path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>`,
+      user: `<svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>`,
+      map: `<svg viewBox="0 0 24 24"><path d="M9 18l6-3 6 3V6l-6-3-6 3-6-3v12l6 3z"/><path d="M9 6v12M15 3v12"/></svg>`,
+      arrow: `<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`
+    };
+    const iconWrap = (icon) => `<span class="contact-info-icon" aria-hidden="true">${icon}</span>`;
     panel.innerHTML = `
       <p class="section-kicker">Th&#244;ng tin li&#234;n h&#7879;</p>
       <h2>${escapeHtml(company.displayName || company.legalName || "MOXON Tech")}</h2>
       <ul class="info-list">
-        <li><strong>Hotline:</strong> <a href="tel:${escapeHtml(company.phoneHref || company.phone || "")}">${escapeHtml(company.phone || "")}</a></li>
-        <li><strong>Email:</strong> <a href="mailto:${escapeHtml(company.email || "")}">${escapeHtml(company.email || "")}</a></li>
-        <li><strong>Website:</strong> <a href="${escapeHtml(company.websiteUrl || "#")}" target="_blank" rel="noopener">${escapeHtml(company.website || company.websiteUrl || "")}</a></li>
-        <li><strong>&#272;&#7883;a ch&#7881;:</strong> ${escapeHtml(company.address || "")}</li>
-        <li><strong>Ng&#432;&#7901;i li&#234;n h&#7879;/&#273;&#7841;i di&#7879;n:</strong> ${escapeHtml(company.representative || "")}</li>
+        <li>${iconWrap(contactIcon.phone)}<span><strong>Hotline:</strong> <a href="tel:${escapeHtml(company.phoneHref || company.phone || "")}">${escapeHtml(company.phone || "")}</a></span></li>
+        <li>${iconWrap(contactIcon.mail)}<span><strong>Email:</strong> <a href="mailto:${escapeHtml(company.email || "")}">${escapeHtml(company.email || "")}</a></span></li>
+        <li>${iconWrap(contactIcon.globe)}<span><strong>Website:</strong> <a href="${escapeHtml(company.websiteUrl || "#")}" target="_blank" rel="noopener">${escapeHtml(company.website || company.websiteUrl || "")}</a></span></li>
+        <li>${iconWrap(contactIcon.pin)}<span><strong>&#272;&#7883;a ch&#7881;:</strong> ${escapeHtml(company.address || "")}</span></li>
+        <li>${iconWrap(contactIcon.user)}<span><strong>Ng&#432;&#7901;i li&#234;n h&#7879;/&#273;&#7841;i di&#7879;n:</strong> ${escapeHtml(company.representative || "")}</span></li>
       </ul>
       ${
         company.mapEmbed
@@ -578,12 +588,20 @@
                 loading="lazy"
                 allowfullscreen
                 referrerpolicy="strict-origin-when-cross-origin"></iframe>
+              <div class="contact-map-address">
+                <span aria-hidden="true">${contactIcon.pin}</span>
+                ${escapeHtml(company.address || "")}
+              </div>
             </div>`
           : ""
       }
       ${
         company.mapLink
-          ? `<a class="footer-map-button contact-map-button" href="${escapeHtml(company.mapLink)}" target="_blank" rel="noopener">M&#7903; Google Maps</a>`
+          ? `<a class="footer-map-button contact-map-button" href="${escapeHtml(company.mapLink)}" target="_blank" rel="noopener">
+              <span class="contact-map-button-icon" aria-hidden="true">${contactIcon.map}</span>
+              M&#7903; Google Maps
+              <span class="contact-map-button-arrow" aria-hidden="true">${contactIcon.arrow}</span>
+            </a>`
           : ""
       }
     `;
@@ -765,7 +783,7 @@
         finishRender(nextData || window.MOXON_DATA || data);
       })
       .catch((error) => {
-        console.warn("Khong cap nhat duoc du lieu Supabase, hien thi du lieu fallback.", error);
+        console.warn("Không cập nhật được dữ liệu Supabase, hiển thị dữ liệu fallback.", error);
         finishRender(window.MOXON_DATA || data);
       });
   } else {

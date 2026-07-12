@@ -99,12 +99,8 @@ alter table if exists public.products
 alter table if exists public.products
   drop column if exists date;
 
-create or replace view public.products_with_vn_time as
-select
-  products.*,
-  products.created_at at time zone 'Asia/Ho_Chi_Minh' as created_at_vn,
-  products.updated_at at time zone 'Asia/Ho_Chi_Minh' as updated_at_vn
-from public.products;
+-- The UI formats product timestamps directly, so this unrestricted helper view is no longer needed.
+drop view if exists public.products_with_vn_time;
 
 -- Product categories: public can only read active categories; signed-in admins can manage all.
 drop policy if exists "Public can read active product categories" on public.product_categories;

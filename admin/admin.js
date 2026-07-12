@@ -283,11 +283,28 @@
     return new Blob([bytes], { type: mime });
   };
 
+  const getStorageNameHint = (value, fallback = "hinh-anh") => {
+    if (!value || typeof value !== "object") return slugify(fallback) || "hinh-anh";
+    return (
+      slugify(
+        value.title ||
+          value.name ||
+          value.displayName ||
+          value.legalName ||
+          value.id ||
+          value.alt ||
+          fallback
+      ) || slugify(fallback) || "hinh-anh"
+    );
+  };
+
   const uploadProductImageIfNeeded = async (record) => {
     if (!supabaseClient || !String(record.image || "").startsWith("data:image/")) return record;
     const blob = dataUrlToBlob(record.image);
     const ext = blob.type.includes("png") ? "png" : "jpg";
-    const path = `products/${record.id}-${Date.now()}.${ext}`;
+    const nameHint = getStorageNameHint(record, "san-pham");
+    const idHint = slugify(record.id || nameHint) || nameHint;
+    const path = `products/${nameHint}-${idHint}-${Date.now()}.${ext}`;
     const { error } = await supabaseClient.storage
       .from(supabaseConfig.mediaBucket || "moxon-media")
       .upload(path, blob, { upsert: true, contentType: blob.type });
@@ -298,12 +315,14 @@
     return { ...record, image: publicData.publicUrl };
   };
 
-  const uploadCmsImageValue = async (value, sectionKey = "cms") => {
+  const uploadCmsImageValue = async (value, sectionKey = "cms", nameHint = "hinh-anh", fieldHint = "image") => {
     if (!supabaseClient || !String(value || "").startsWith("data:image/")) return value;
     const blob = dataUrlToBlob(value);
     const ext = blob.type.includes("png") ? "png" : "jpg";
     const safeSection = slugify(sectionKey) || "cms";
-    const path = `${safeSection}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const safeName = slugify(nameHint) || safeSection;
+    const safeField = slugify(fieldHint) || "image";
+    const path = `${safeSection}/${safeName}-${safeField}-${Date.now()}.${ext}`;
     const { error } = await supabaseClient.storage
       .from(supabaseConfig.mediaBucket || "moxon-media")
       .upload(path, blob, { upsert: true, contentType: blob.type });
@@ -314,18 +333,103 @@
     return publicData.publicUrl;
   };
 
-  const uploadCmsImagesInValue = async (value, sectionKey = "cms") => {
-    if (typeof value === "string") return uploadCmsImageValue(value, sectionKey);
+  const uploadCmsImagesInValue = async (value, sectionKey = "cms", nameHint = sectionKey, fieldHint = "image") => {
+    if (typeof value === "string") return uploadCmsImageValue(value, sectionKey, nameHint, fieldHint);
     if (Array.isArray(value)) {
-      return Promise.all(value.map((item) => uploadCmsImagesInValue(item, sectionKey)));
+      return Promise.all(
+        value.map((item, index) =>
+          uploadCmsImagesInValue(item, sectionKey, getStorageNameHint(item, `${sectionKey}-${index + 1}`), fieldHint)
+        )
+      );
     }
     if (value && typeof value === "object") {
+      const objectNameHint = getStorageNameHint(value, nameHint);
       const entries = await Promise.all(
-        Object.entries(value).map(async ([key, childValue]) => [key, await uploadCmsImagesInValue(childValue, sectionKey)])
+        Object.entries(value).map(async ([key, childValue]) => [
+          key,
+          await uploadCmsImagesInValue(childValue, sectionKey, objectNameHint, key)
+        ])
       );
       return Object.fromEntries(entries);
     }
     return value;
+  };
+
+  const getStorageObjectRef = (value) => {
+    const rawValue = String(value || "").trim();
+    if (!rawValue || rawValue.startsWith("data:") || rawValue.startsWith("assets/")) return null;
+
+    const mediaBucket = supabaseConfig.mediaBucket || "moxon-media";
+    const privateBucket = supabaseConfig.privateBucket || "moxon-private";
+    const knownBuckets = [mediaBucket, privateBucket].filter(Boolean);
+
+    if (rawValue.startsWith("contact-attachments/")) {
+      return { bucket: privateBucket, path: rawValue };
+    }
+
+    for (const bucket of knownBuckets) {
+      if (rawValue.startsWith(`${bucket}/`)) {
+        return { bucket, path: rawValue.slice(bucket.length + 1) };
+      }
+    }
+
+    try {
+      const url = new URL(rawValue);
+      const publicMarker = "/storage/v1/object/public/";
+      const signedMarker = "/storage/v1/object/sign/";
+      const marker = url.pathname.includes(publicMarker) ? publicMarker : url.pathname.includes(signedMarker) ? signedMarker : "";
+      if (!marker) return null;
+
+      const objectPath = decodeURIComponent(url.pathname.slice(url.pathname.indexOf(marker) + marker.length));
+      const [bucket, ...pathParts] = objectPath.split("/");
+      if (!knownBuckets.includes(bucket) || !pathParts.length) return null;
+      return { bucket, path: pathParts.join("/") };
+    } catch {
+      return null;
+    }
+  };
+
+  const collectStorageObjectRefs = (value, refs = new Map()) => {
+    if (!value) return refs;
+    if (typeof value === "string") {
+      const ref = getStorageObjectRef(value);
+      if (ref) refs.set(`${ref.bucket}/${ref.path}`, ref);
+      return refs;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item) => collectStorageObjectRefs(item, refs));
+      return refs;
+    }
+    if (typeof value === "object") {
+      Object.values(value).forEach((item) => collectStorageObjectRefs(item, refs));
+    }
+    return refs;
+  };
+
+  const deleteStorageRefsNoLongerUsed = async (previousValue, nextData) => {
+    if (!supabaseClient) return 0;
+    const previousRefs = collectStorageObjectRefs(previousValue);
+    if (!previousRefs.size) return 0;
+
+    const stillUsedRefs = collectStorageObjectRefs(nextData);
+    const refsToDelete = Array.from(previousRefs.values()).filter((ref) => !stillUsedRefs.has(`${ref.bucket}/${ref.path}`));
+    if (!refsToDelete.length) return 0;
+
+    const refsByBucket = refsToDelete.reduce((groups, ref) => {
+      if (!groups[ref.bucket]) groups[ref.bucket] = [];
+      groups[ref.bucket].push(ref.path);
+      return groups;
+    }, {});
+
+    let deletedCount = 0;
+    await Promise.all(
+      Object.entries(refsByBucket).map(async ([bucket, paths]) => {
+        const { error } = await supabaseClient.storage.from(bucket).remove(paths);
+        if (error) throw error;
+        deletedCount += paths.length;
+      })
+    );
+    return deletedCount;
   };
 
   const withTimeout = (promise, timeoutMs = 7000, label = "Supabase") => {
@@ -526,43 +630,6 @@
         metadata.avatar ||
         ""
     };
-  };
-
-  const compactStorageImages = (value, key = "") => {
-    if (typeof value === "string") {
-      if (!value.startsWith("data:image/")) return { value, changed: false, count: 0 };
-      if (key === "attachmentData" || key === "cvData") return { value: "", changed: true, count: 1 };
-      if (key === "logo") return { value: "assets/logo-transparent.png?v=20260630-opt", changed: true, count: 1 };
-      if (key === "favicon" || key === "avatar") return { value: "", changed: true, count: 1 };
-      return { value: "assets/optimized/project-cnc-parts.jpg", changed: true, count: 1 };
-    }
-
-    if (Array.isArray(value)) {
-      let changed = false;
-      let count = 0;
-      const nextValue = value.map((item) => {
-        const result = compactStorageImages(item, key);
-        changed = changed || result.changed;
-        count += result.count;
-        return result.value;
-      });
-      return { value: nextValue, changed, count };
-    }
-
-    if (value && typeof value === "object") {
-      let changed = false;
-      let count = 0;
-      const nextValue = {};
-      Object.keys(value).forEach((childKey) => {
-        const result = compactStorageImages(value[childKey], childKey);
-        changed = changed || result.changed;
-        count += result.count;
-        nextValue[childKey] = result.value;
-      });
-      return { value: nextValue, changed, count };
-    }
-
-    return { value, changed: false, count: 0 };
   };
 
   const addActivityLog = async (action, target, detail) => {
@@ -1100,6 +1167,7 @@
 
   const saveSectionData = async (sectionKey, sectionValue, actionInfo = null) => {
     const latestData = getData();
+    const previousSectionValue = latestData[sectionKey];
     let savedData;
     if (!useClassicLocalAdmin && supabaseClient && remoteSectionKeys.has(sectionKey)) {
       const remoteValue = await syncRemoteSection(sectionKey, sectionValue);
@@ -1118,6 +1186,15 @@
     data = savedData;
     if (actionInfo) {
       await addActivityLog(actionInfo.action, actionInfo.target, actionInfo.detail);
+    }
+    try {
+      const deletedStorageCount = await deleteStorageRefsNoLongerUsed(previousSectionValue, savedData);
+      if (deletedStorageCount > 0) {
+        showToast(`Đã xóa ${deletedStorageCount} tệp Storage không còn dùng.`, "success");
+      }
+    } catch (error) {
+      console.warn("Không xóa được một số tệp Storage không còn dùng.", error);
+      showToast("Dữ liệu đã lưu, nhưng có tệp Storage cũ chưa xóa được.", "error");
     }
     return savedData;
   };
@@ -4311,7 +4388,8 @@
             const latestData = getData();
             const records = Array.isArray(latestData[section.key]) ? latestData[section.key] : [];
             const index = Number(button.dataset.deleteListRecord);
-            const targetName = records[index] ? getRecordTitle(records[index], index) : "";
+            const targetRecord = records[index];
+            const targetName = targetRecord ? getRecordTitle(targetRecord, index) : "";
             records.splice(index, 1);
             await saveSectionData(section.key, records, { action: "Xóa", target: section.label, detail: targetName });
             renderSummary();
@@ -4509,7 +4587,8 @@
             const latestData = getData();
             const records = Array.isArray(latestData.contactMessages) ? latestData.contactMessages : [];
             const index = Number(button.dataset.deleteMessage);
-            const targetName = records[index]?.name || records[index]?.email || records[index]?.phone || "Yêu cầu";
+            const targetRecord = records[index];
+            const targetName = targetRecord?.name || targetRecord?.email || targetRecord?.phone || "Yêu cầu";
             records.splice(index, 1);
             await saveSectionData("contactMessages", records, { action: "Xóa", target: "Liên hệ", detail: targetName });
             renderSummary();
@@ -4559,7 +4638,8 @@
             const latestData = getData();
             const records = Array.isArray(latestData.banners) ? latestData.banners : [];
             const index = Number(button.dataset.deleteBanner);
-            const targetName = records[index]?.title || records[index]?.id || "";
+            const targetRecord = records[index];
+            const targetName = targetRecord?.title || targetRecord?.id || "";
             records.splice(index, 1);
             await saveSectionData("banners", records, { action: "Xóa", target: "Banner", detail: targetName });
             renderSummary();
@@ -4678,7 +4758,8 @@
             const latestData = getData();
             const records = Array.isArray(latestData.services) ? latestData.services : [];
             const index = Number(button.dataset.deleteService);
-            const targetName = records[index]?.title || records[index]?.name || "";
+            const targetRecord = records[index];
+            const targetName = targetRecord?.title || targetRecord?.name || "";
             records.splice(index, 1);
             await saveSectionData("services", records, { action: "Xóa", target: "Dịch vụ", detail: targetName });
             renderSummary();
@@ -4722,7 +4803,8 @@
             const index = Number(button.dataset.deleteRecord);
             const latestData = getData();
             const records = Array.isArray(latestData[section.key]) ? latestData[section.key] : [];
-            const targetName = records[index]?.title || records[index]?.name || records[index]?.id || "";
+            const targetRecord = records[index];
+            const targetName = targetRecord?.title || targetRecord?.name || targetRecord?.id || "";
             records.splice(index, 1);
             await saveSectionData(section.key, records, { action: "Xóa", target: section.label, detail: targetName });
             render();

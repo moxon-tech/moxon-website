@@ -11,6 +11,7 @@ Deploy the public website with these paths:
 - `assets/logo-transparent.png`
 - `data/`
 - `*.html`
+- `_headers`
 - `robots.txt`
 - `sitemap.xml`
 
@@ -47,3 +48,19 @@ Public contact and recruitment forms save directly to Supabase:
 - `admin_activity_logs`
 
 The old FormSubmit fallback has been removed from the public forms to avoid duplicate submissions.
+
+## Storage cleanup
+
+When admins delete or replace CMS records/images, the admin script removes Supabase Storage files that are no longer referenced by the saved CMS data.
+
+- Public website media is stored in `moxon-media`.
+- Contact/recruitment attachments are stored in `moxon-private`.
+- Local repository images such as `assets/optimized/*` are not deleted by the admin.
+- New uploaded Storage files are named from the related record title/name first, then the field name and timestamp, so they are easier to find in Supabase.
+
+## Supabase handover checklist
+
+- Disable public signup in Supabase Auth before handover, or replace the broad `authenticated` admin policies with an admin whitelist.
+- Keep `cms_sections` public-readable only for content that is safe to show on the website. Do not store secrets, private notes, API keys, or internal prices there.
+- Run the latest `supabase-cms-schema.sql` once after deployment. It removes the unused `products_with_vn_time` view so Supabase does not keep showing it as unrestricted.
+- Add CAPTCHA or rate limiting later if public contact/recruitment spam becomes a problem.

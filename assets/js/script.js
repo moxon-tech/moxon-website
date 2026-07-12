@@ -76,9 +76,21 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/^-|-$/g, "")
       .toLowerCase() || "tep-dinh-kem";
 
-  const uploadMessageAttachment = async (client, file, type, messageId, fieldName) => {
+  const getSubmitterFolderName = (fields) =>
+    safeFileName(
+      fields.name ||
+        fields.ho_ten ||
+        fields.company ||
+        fields.email ||
+        fields.phone ||
+        fields.dien_thoai ||
+        "khach-hang"
+    );
+
+  const uploadMessageAttachment = async (client, file, type, messageId, fieldName, submitterFolderName) => {
     const bucket = window.MOXON_SUPABASE_CONFIG?.privateBucket || window.MOXON_SUPABASE_CONFIG?.mediaBucket || "moxon-media";
-    const path = `contact-attachments/${type}/${messageId}/${Date.now()}-${fieldName}-${safeFileName(file.name)}`;
+    const folderName = `${submitterFolderName}-${messageId}`;
+    const path = `contact-attachments/${type}/${folderName}/${Date.now()}-${fieldName}-${safeFileName(file.name)}`;
     const { error } = await client.storage.from(bucket).upload(path, file, {
       cacheControl: "31536000",
       upsert: false
@@ -94,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData(form);
     const fields = {};
     const client = window.MOXON_SUPABASE_CLIENT || null;
-    const messageId = `${type}-${Date.now()}`;
 
     if (!client) {
       throw new Error("Kh\u00f4ng k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c h\u1ec7 th\u1ed1ng l\u01b0u d\u1eef li\u1ec7u. Vui l\u00f2ng th\u1eed l\u1ea1i sau ho\u1eb7c li\u00ean h\u1ec7 tr\u1ef1c ti\u1ebfp qua hotline.");
@@ -105,6 +116,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fields[key] = value instanceof File ? value.name : value;
     });
 
+    const messageId = `${type}-${Date.now()}`;
+    const submitterFolderName = getSubmitterFolderName(fields);
     const fileInputs = Array.from(form.querySelectorAll("input[type='file']"));
     await Promise.all(fileInputs.map(async (fileInput) => {
       const name = fileInput.name;
@@ -114,12 +127,12 @@ document.addEventListener("DOMContentLoaded", () => {
       fields[name] = file.name;
       if (client) {
         try {
-          const uploaded = await uploadMessageAttachment(client, file, type, messageId, name);
+          const uploaded = await uploadMessageAttachment(client, file, type, messageId, name, submitterFolderName);
           fields[name + "Data"] = uploaded.path;
           fields[name + "Path"] = uploaded.path;
           return;
         } catch (error) {
-          console.warn("Khong upload duoc tep len Supabase Storage.", error);
+          console.warn("Không upload được tệp lên Supabase Storage.", error);
           throw new Error("Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c t\u1ec7p \u0111\u00ednh k\u00e8m. Vui l\u00f2ng th\u1eed l\u1ea1i ho\u1eb7c g\u1eedi form kh\u00f4ng k\u00e8m t\u1ec7p.");
         }
       }
