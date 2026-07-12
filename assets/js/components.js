@@ -42,8 +42,8 @@ function refreshComponentData() {
   MOXON_PHONE = MOXON_COMPANY.phone || "0988 440 436";
   MOXON_PHONE_HREF = MOXON_COMPANY.phoneHref || "0988440436";
   MOXON_EMAIL = MOXON_COMPANY.email || "moxontech.vn@gmail.com";
-  MOXON_WEBSITE = MOXON_COMPANY.website || "www.moxontech.vn";
-  MOXON_WEBSITE_URL = MOXON_COMPANY.websiteUrl || "https://www.moxontech.vn";
+  MOXON_WEBSITE = MOXON_COMPANY.website || "moxontech.vn";
+  MOXON_WEBSITE_URL = MOXON_COMPANY.websiteUrl || "https://moxontech.vn";
   MOXON_ADDRESS_HTML =
     MOXON_COMPANY.addressHtml || escapeComponentHtml(MOXON_COMPANY.address) || "S&#7889; 16 Khu Qu&#7871; S&#417;n, P. H&#7841;p L&#297;nh, B&#7855;c Ninh";
   MOXON_REPRESENTATIVE = MOXON_COMPANY.representative || "&#212;ng Tr&#7883;nh V&#259;n Chinh - Gi&#225;m &#273;&#7889;c";

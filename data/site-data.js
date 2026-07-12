@@ -7,8 +7,8 @@ window.MOXON_DATA = {
     phone: "0988 440 436",
     phoneHref: "0988440436",
     email: "moxontech.vn@gmail.com",
-    website: "www.moxontech.vn",
-    websiteUrl: "https://www.moxontech.vn",
+    website: "moxontech.vn",
+    websiteUrl: "https://moxontech.vn",
     address: "Số 16 Khu Quế Sơn, P. Hạp Lĩnh, Bắc Ninh",
     addressHtml: "S&#7889; 16 Khu Qu&#7871; S&#417;n, P. H&#7841;p L&#297;nh, B&#7855;c Ninh",
     mapEmbed:
