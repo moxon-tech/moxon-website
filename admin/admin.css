@@ -1173,6 +1173,163 @@ a.admin-secondary-btn {
   white-space: nowrap;
 }
 
+.admin-mobile-contact-list {
+  display: none;
+}
+
+.admin-mobile-contact-card[hidden],
+.admin-mobile-contact-empty[hidden] {
+  display: none !important;
+}
+
+.admin-mobile-contact-main {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-mobile-contact-info {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+
+.admin-mobile-contact-info > strong {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.admin-mobile-contact-info .admin-contact-type,
+.admin-mobile-contact-info .admin-contact-badge {
+  justify-self: start;
+}
+
+.admin-mobile-contact-time {
+  min-width: 58px;
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+  text-align: right;
+  color: #64748b;
+}
+
+.admin-mobile-contact-time strong {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.admin-mobile-contact-time span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-mobile-contact-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  padding-left: 70px;
+}
+
+.admin-mobile-contact-actions .admin-secondary-btn,
+.admin-mobile-contact-actions .admin-danger-btn {
+  min-height: 36px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.admin-mobile-resource-list {
+  display: none;
+}
+
+.admin-mobile-resource-card[hidden],
+.admin-mobile-resource-empty[hidden] {
+  display: none !important;
+}
+
+.admin-mobile-resource-main {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.admin-mobile-resource-main.is-no-thumb {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.admin-mobile-resource-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #edf2f7;
+}
+
+.admin-mobile-resource-info {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.admin-mobile-resource-info strong {
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 850;
+  line-height: 1.22;
+}
+
+.admin-mobile-resource-info span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.admin-mobile-resource-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.admin-mobile-resource-meta span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f4f7fb;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.admin-mobile-resource-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.admin-mobile-resource-actions .admin-secondary-btn,
+.admin-mobile-resource-actions .admin-danger-btn {
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
 .admin-line-chart {
   min-height: 245px;
   display: grid;
@@ -1214,7 +1371,7 @@ a.admin-secondary-btn {
 .admin-activity-list {
   display: grid;
   gap: 12px;
-  max-height: 360px;
+  max-height: 470px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -4208,6 +4365,51 @@ a.admin-secondary-btn {
     align-items: stretch;
     flex-direction: column;
   }
+
+  .admin-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(146px, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .admin-summary-card {
+    min-height: 112px;
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-summary-card-header {
+    margin-bottom: 6px;
+  }
+
+  .admin-summary-card-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-summary-card-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .admin-summary-card span {
+    font-size: 0.7rem !important;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+  }
+
+  .admin-summary-card strong {
+    margin-top: 8px !important;
+    font-size: 1.38rem !important;
+    line-height: 1;
+  }
+
+  .admin-summary-card small {
+    margin-top: 6px !important;
+    font-size: 0.7rem !important;
+    line-height: 1.25;
+  }
 }
 
 @media (max-width: 480px) {
@@ -4226,5 +4428,1493 @@ a.admin-secondary-btn {
 
   .admin-mobile-profile {
     min-width: 118px;
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .admin-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Final admin mobile layout: compact, scan-friendly admin UI. */
+@media (max-width: 900px) {
+  .admin-page {
+    background: #f4f7fb;
+  }
+
+  .admin-sidebar {
+    padding: 8px 12px !important;
+    border-radius: 0 0 14px 14px !important;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24) !important;
+  }
+
+  .admin-sidebar-top {
+    min-height: 50px !important;
+    gap: 8px !important;
+  }
+
+  .admin-main {
+    padding: 10px !important;
+    padding-top: 76px !important;
+  }
+
+  .admin-brand {
+    flex-basis: 126px !important;
+    min-width: 118px !important;
+    gap: 8px !important;
+  }
+
+  .admin-brand img {
+    width: 50px !important;
+  }
+
+  .admin-brand span {
+    min-height: 36px !important;
+    padding-left: 9px !important;
+  }
+
+  .admin-brand span::after {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-mobile-profile {
+    max-width: 172px !important;
+    min-width: 126px !important;
+  }
+
+  .admin-mobile-profile .admin-user-profile {
+    height: 48px !important;
+    padding: 5px 8px !important;
+    border-radius: 13px !important;
+  }
+
+  .admin-mobile-profile .admin-avatar-wrap {
+    width: 34px !important;
+    height: 34px !important;
+    flex-basis: 34px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info strong {
+    font-size: 0.78rem !important;
+  }
+
+  .admin-mobile-profile .admin-user-info span {
+    font-size: 0.64rem !important;
+  }
+
+  .admin-mobile-menu-toggle {
+    width: 46px !important;
+    height: 46px !important;
+    flex-basis: 46px !important;
+    border-radius: 13px !important;
+  }
+
+  .admin-mobile-menu-toggle span {
+    width: 22px !important;
+    height: 2px !important;
+  }
+
+  .admin-nav {
+    top: calc(100% + 8px) !important;
+    max-height: min(72vh, 520px) !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .admin-nav.is-open {
+    gap: 10px !important;
+  }
+
+  .admin-nav .admin-nav-group {
+    gap: 5px !important;
+  }
+
+  .admin-nav .admin-nav-group > span {
+    margin: 0 3px 2px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .admin-nav button {
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .admin-topbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px !important;
+    margin: 6px 0 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .admin-kicker {
+    margin-bottom: 3px !important;
+    font-size: 0.66rem !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  .admin-topbar h1,
+  .admin-topbar-heading.is-dashboard-welcome h1 {
+    font-size: 1.14rem !important;
+    line-height: 1.16 !important;
+  }
+
+  .admin-topbar-heading.is-dashboard-welcome p {
+    font-size: 0.78rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .admin-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .admin-actions:empty {
+    display: none !important;
+  }
+
+  .admin-actions > a,
+  .admin-actions > button {
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .admin-summary-card {
+    min-height: 94px !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-summary-card-header {
+    margin-bottom: 4px !important;
+  }
+
+  .admin-summary-card-icon {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .admin-summary-card strong {
+    margin-top: 6px !important;
+    font-size: 1.28rem !important;
+  }
+
+  .admin-summary-card span,
+  .admin-summary-card small {
+    font-size: 0.66rem !important;
+  }
+
+  .admin-editor-panel,
+  .admin-dashboard-card,
+  .admin-table-container,
+  .admin-empty-state {
+    border-radius: 10px !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .admin-editor-panel,
+  .admin-dashboard-card {
+    padding: 12px !important;
+  }
+
+  .admin-editor-head {
+    gap: 8px !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .admin-editor-head h2,
+  .admin-editor-head h3,
+  .admin-card-head h3 {
+    font-size: 1.02rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .admin-dashboard-layout {
+    gap: 10px !important;
+  }
+
+  .admin-card-head {
+    margin-bottom: 10px !important;
+  }
+
+  .admin-dashboard-list,
+  .admin-dashboard-contact-list,
+  .admin-record-list {
+    gap: 8px !important;
+  }
+
+  .admin-dashboard-list article,
+  .admin-dashboard-contact-list article,
+  .admin-record,
+  .admin-product-card,
+  .admin-dashboard-product-row {
+    border-radius: 8px !important;
+    padding: 10px !important;
+  }
+
+  .admin-dashboard-list-rich article,
+  .admin-product-card {
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .admin-dashboard-thumb,
+  .admin-dashboard-product-thumb,
+  .admin-table-thumb,
+  .admin-product-card img,
+  .admin-product-card .admin-record-avatar {
+    width: 58px !important;
+    height: 48px !important;
+    border-radius: 7px !important;
+  }
+
+  .admin-table-toolbar,
+  .admin-table-filters {
+    gap: 8px !important;
+  }
+
+  .admin-table-wrapper {
+    border-radius: 8px !important;
+    overflow-x: auto !important;
+  }
+
+  .admin-table {
+    min-width: 620px !important;
+  }
+
+  .admin-page[data-admin-section="contactMessages"] .admin-contact-table-container {
+    display: none !important;
+  }
+
+  .admin-page[data-admin-section="contactMessages"] .admin-mobile-contact-list {
+    display: grid !important;
+    gap: 0 !important;
+    overflow: hidden;
+    margin-top: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-page[data-admin-section="products"] .admin-product-table-container {
+    display: none !important;
+  }
+
+  .admin-page[data-admin-section="products"] .admin-mobile-product-list {
+    display: grid !important;
+    gap: 10px !important;
+    margin-top: 10px;
+  }
+
+  .admin-list-table-container,
+  .admin-service-table-container {
+    display: none !important;
+  }
+
+  .admin-mobile-list-records,
+  .admin-mobile-service-list {
+    display: grid !important;
+    gap: 10px !important;
+    margin-top: 10px;
+  }
+
+  .admin-mobile-resource-card {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-mobile-resource-card .admin-badge {
+    align-self: start;
+    justify-self: end;
+    padding: 6px 9px !important;
+    font-size: 0.68rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .admin-mobile-contact-card {
+    padding: 14px 12px;
+    border-bottom: 1px solid #e5edf6;
+    background: #ffffff;
+  }
+
+  .admin-mobile-contact-card:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-mobile-contact-card .admin-contact-avatar {
+    width: 54px !important;
+    height: 54px !important;
+    background: #e9f8ed !important;
+    color: #14923f !important;
+  }
+
+  .admin-mobile-contact-card .admin-contact-status-dot {
+    width: 11px !important;
+    height: 11px !important;
+    right: 2px !important;
+    bottom: 3px !important;
+    background: #16a34a !important;
+  }
+
+  .admin-mobile-contact-info > strong {
+    font-size: 0.96rem !important;
+  }
+
+  .admin-mobile-contact-info .admin-contact-badge {
+    padding: 5px 10px !important;
+    border-radius: 7px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 9px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .admin-form {
+    gap: 10px !important;
+    margin-top: 14px !important;
+  }
+
+  .admin-form-grid {
+    gap: 10px !important;
+  }
+
+  .admin-form-section,
+  .admin-repeat-section,
+  .admin-structured-form[data-about-page-form] > .admin-form-grid {
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-form-section-title {
+    margin-bottom: 10px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .admin-form label {
+    gap: 6px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .admin-form input,
+  .admin-form textarea,
+  .admin-form select,
+  .admin-table-filters input,
+  .admin-table-filters select {
+    min-height: 40px !important;
+    padding: 9px 10px !important;
+    border-radius: 7px !important;
+    font-size: 16px !important;
+  }
+
+  .admin-form textarea {
+    min-height: 86px !important;
+  }
+
+  .admin-image-picker-row {
+    grid-template-columns: 1fr !important;
+    padding: 10px !important;
+  }
+
+  .admin-image-picker-row img,
+  .admin-image-preview-box {
+    min-height: 118px !important;
+    max-height: 180px !important;
+  }
+
+  .admin-record-actions,
+  .admin-quick-actions,
+  .admin-cropper-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .admin-record-actions button,
+  .admin-quick-actions button,
+  .admin-primary-btn,
+  .admin-secondary-btn,
+  .admin-ghost-btn,
+  .admin-danger-btn,
+  .admin-small-btn {
+    min-height: 38px !important;
+    padding: 8px 10px !important;
+    border-radius: 7px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-main {
+    padding: 8px !important;
+    padding-top: 70px !important;
+  }
+
+  .admin-sidebar {
+    padding: 7px 8px !important;
+  }
+
+  .admin-sidebar-top {
+    min-height: 46px !important;
+  }
+
+  .admin-brand {
+    flex-basis: 106px !important;
+    min-width: 104px !important;
+  }
+
+  .admin-brand img {
+    width: 44px !important;
+  }
+
+  .admin-brand span {
+    min-height: 32px !important;
+    padding-left: 7px !important;
+  }
+
+  .admin-brand span::after {
+    font-size: 0.78rem !important;
+  }
+
+  .admin-mobile-profile {
+    min-width: 104px !important;
+    max-width: 132px !important;
+  }
+
+  .admin-mobile-profile .admin-user-profile {
+    height: 44px !important;
+    padding: 5px 7px !important;
+  }
+
+  .admin-mobile-profile .admin-avatar-wrap {
+    width: 30px !important;
+    height: 30px !important;
+    flex-basis: 30px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info strong {
+    font-size: 0.72rem !important;
+  }
+
+  .admin-mobile-profile .admin-user-info span {
+    display: block !important;
+  }
+
+  .admin-mobile-menu-toggle {
+    width: 42px !important;
+    height: 42px !important;
+    flex-basis: 42px !important;
+  }
+
+  .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .admin-summary-card {
+    min-height: 88px !important;
+  }
+
+  .admin-actions,
+  .admin-record-actions,
+  .admin-quick-actions,
+  .admin-cropper-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-dashboard-product-table {
+    border-radius: 10px !important;
+  }
+
+  .admin-dashboard-product-table .admin-dashboard-table-head {
+    display: none !important;
+  }
+
+  .admin-dashboard-product-row {
+    min-height: 112px !important;
+    display: grid !important;
+    grid-template-columns: 82px minmax(0, 1fr) 70px !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    column-gap: 12px !important;
+    row-gap: 8px !important;
+    padding: 14px 12px !important;
+    border-bottom: 1px solid #e5edf6 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .admin-dashboard-product-main {
+    display: contents !important;
+  }
+
+  .admin-dashboard-product-thumb {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 82px !important;
+    height: 82px !important;
+    border-radius: 10px !important;
+  }
+
+  .admin-dashboard-product-row .admin-dashboard-product-main > strong {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    color: #0f172a !important;
+    font-size: 1.05rem !important;
+    line-height: 1.16 !important;
+    white-space: normal !important;
+  }
+
+  .admin-dashboard-product-row > span {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 7px;
+    margin-left: 0 !important;
+    max-width: 100%;
+    min-height: 34px;
+    padding: 7px 10px !important;
+    border-radius: 999px;
+    background: #f4f7fb;
+    color: #475569 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .admin-dashboard-product-row > span::before {
+    content: "" !important;
+    width: 10px;
+    min-width: 10px !important;
+    height: 10px;
+    border: 1.8px solid currentColor;
+    border-radius: 3px;
+    transform: rotate(-35deg);
+    opacity: 0.85;
+  }
+
+  .admin-dashboard-product-row > span:nth-of-type(1)::before,
+  .admin-dashboard-product-row > span:nth-of-type(2)::before {
+    content: "" !important;
+    display: inline-block !important;
+    min-width: 10px !important;
+  }
+
+  .admin-dashboard-product-time {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    min-width: 68px;
+    align-items: flex-end !important;
+    justify-self: end;
+    padding-left: 12px;
+    border-left: 1px solid #e5edf6;
+    text-align: right !important;
+  }
+
+  .admin-dashboard-product-time strong {
+    color: #0f172a !important;
+    font-size: 0.98rem !important;
+  }
+
+  .admin-dashboard-product-time span {
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-dashboard-contact-list article {
+    display: grid !important;
+    grid-template-columns: 54px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 14px 12px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e5edf6 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .admin-dashboard-contact-list article:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .admin-dashboard-contact-list {
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-dashboard-contact-list .admin-contact-avatar {
+    width: 52px !important;
+    height: 52px !important;
+    background: #e9f8ed !important;
+    color: #14923f !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-status-dot {
+    width: 11px !important;
+    height: 11px !important;
+    right: 2px !important;
+    bottom: 3px !important;
+    background: #16a34a !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-info {
+    gap: 6px !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-name {
+    color: #0f172a !important;
+    font-size: 0.96rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-sub {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-badge {
+    padding: 5px 10px !important;
+    border-radius: 7px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-time-section {
+    min-height: 0 !important;
+    flex: none !important;
+    padding-left: 0 !important;
+    border-left: 0 !important;
+    justify-content: flex-end !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-time-block {
+    align-items: flex-end !important;
+    text-align: right !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-time-block strong {
+    color: #0f172a !important;
+    font-size: 1rem !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-time-block span {
+    font-size: 0.78rem !important;
+  }
+}
+
+/* Mobile admin header account placement. */
+@media (max-width: 900px) {
+  .admin-sidebar-top {
+    justify-content: flex-start !important;
+  }
+
+  .admin-brand {
+    flex: 0 1 auto !important;
+    margin-right: auto !important;
+  }
+
+  .admin-mobile-profile {
+    flex: 0 0 clamp(126px, 34vw, 154px) !important;
+    width: clamp(126px, 34vw, 154px) !important;
+    min-width: 126px !important;
+    max-width: 154px !important;
+    margin-left: auto !important;
+  }
+
+  .admin-mobile-menu-toggle {
+    margin-left: 0 !important;
+  }
+
+  .admin-mobile-profile .admin-user-profile-header {
+    gap: 8px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info {
+    align-content: center !important;
+    gap: 1px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info span {
+    display: block !important;
+    color: #94a3b8 !important;
+    font-size: 0.64rem !important;
+    line-height: 1.1 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-mobile-profile {
+    flex-basis: 124px !important;
+    width: 124px !important;
+    min-width: 124px !important;
+    max-width: 124px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info span {
+    max-width: 72px !important;
+    font-size: 0.6rem !important;
+  }
+
+  .admin-mobile-contact-main {
+    grid-template-columns: 44px minmax(0, 1fr) 76px !important;
+    gap: 8px !important;
+  }
+
+  .admin-mobile-resource-main {
+    grid-template-columns: 62px minmax(0, 1fr) auto !important;
+    gap: 10px !important;
+  }
+
+  .admin-mobile-resource-main.is-no-thumb {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .admin-mobile-resource-thumb {
+    width: 62px !important;
+    height: 62px !important;
+  }
+
+  .admin-mobile-resource-info strong {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-mobile-resource-meta {
+    gap: 5px !important;
+  }
+
+  .admin-mobile-resource-meta span {
+    min-height: 26px !important;
+    padding: 5px 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .admin-mobile-resource-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .admin-mobile-resource-actions .admin-danger-btn {
+    grid-column: 1 / -1;
+  }
+
+  .admin-dashboard-contact-list article {
+    grid-template-columns: 50px minmax(0, 1fr) 52px !important;
+    gap: 10px !important;
+    padding: 13px 10px !important;
+  }
+
+  .admin-dashboard-product-row {
+    grid-template-columns: 74px minmax(0, 1fr) 66px !important;
+    column-gap: 10px !important;
+    min-height: 104px !important;
+    padding: 12px 10px !important;
+  }
+
+  .admin-dashboard-product-thumb {
+    width: 74px !important;
+    height: 74px !important;
+  }
+
+  .admin-dashboard-product-row .admin-dashboard-product-main > strong {
+    font-size: 0.96rem !important;
+  }
+
+  .admin-dashboard-product-row > span {
+    min-height: 32px;
+    padding: 6px 9px !important;
+    font-size: 0.73rem !important;
+  }
+
+  .admin-dashboard-product-time {
+    min-width: 64px !important;
+    padding-left: 9px !important;
+  }
+
+  .admin-dashboard-product-time strong {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-dashboard-product-time span {
+    font-size: 0.72rem !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-avatar {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-name {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-time-block strong {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-dashboard-contact-list .admin-contact-time-block span {
+    font-size: 0.72rem !important;
+  }
+
+  .admin-mobile-contact-card {
+    padding: 13px 10px !important;
+  }
+
+  .admin-mobile-contact-card .admin-contact-avatar {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .admin-mobile-contact-card .admin-contact-avatar svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .admin-mobile-contact-info > strong {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-mobile-contact-time {
+    min-width: 76px !important;
+  }
+
+  .admin-mobile-contact-time strong {
+    font-size: 0.9rem !important;
+  }
+
+  .admin-mobile-contact-time span {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-mobile-contact-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    padding-left: 52px !important;
+  }
+
+  .admin-mobile-contact-actions .admin-danger-btn {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Mobile admin: keep the topbar only on the overview screen. */
+@media (max-width: 900px) {
+  .admin-page:not([data-admin-section="overview"]) .admin-topbar {
+    display: none !important;
+  }
+
+  .admin-page:not([data-admin-section="overview"]) .admin-main {
+    padding-top: 78px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-page:not([data-admin-section="overview"]) .admin-main {
+    padding-top: 72px !important;
+  }
+}
+
+/* Mobile form actions: keep save/cancel near the user's thumb. */
+@media (max-width: 900px) {
+  .admin-page:has(.admin-form-actions) .admin-main,
+  .admin-page:has(.admin-form-save-action) .admin-main {
+    padding-bottom: 96px !important;
+  }
+
+  .admin-form-actions {
+    position: fixed !important;
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 120;
+    display: grid !important;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr) !important;
+    gap: 8px !important;
+    padding: 10px;
+    border: 1px solid rgba(203, 213, 225, 0.9);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.16);
+    backdrop-filter: blur(14px);
+  }
+
+  .admin-form-actions > button,
+  .admin-form-save-action {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 8px !important;
+    font-size: 0.86rem !important;
+  }
+
+  .admin-form-save-action {
+    position: fixed !important;
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    z-index: 120;
+    box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.16);
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-form-actions {
+    left: 8px;
+    right: 8px;
+    bottom: calc(7px + env(safe-area-inset-bottom, 0px));
+    padding: 8px;
+  }
+
+  .admin-form-save-action {
+    left: 8px;
+    right: 8px;
+    bottom: calc(7px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Final admin mobile typography: readable small labels while keeping desktop unchanged. */
+@media (max-width: 900px) {
+  .admin-kicker,
+  .admin-nav .admin-nav-group > span,
+  .admin-summary-card span,
+  .admin-summary-card small,
+  .admin-mobile-resource-meta span,
+  .admin-mobile-contact-time span,
+  .admin-dashboard-product-time span,
+  .admin-badge,
+  .admin-contact-badge {
+    font-size: max(0.74rem, 12px) !important;
+    line-height: 1.22 !important;
+  }
+
+  .admin-mobile-profile .admin-user-info span {
+    font-size: max(0.68rem, 11px) !important;
+    line-height: 1.12 !important;
+  }
+
+  .admin-mobile-resource-info strong,
+  .admin-mobile-contact-info > strong,
+  .admin-dashboard-contact-list .admin-contact-name {
+    font-size: max(0.92rem, 14.5px) !important;
+    line-height: 1.2 !important;
+  }
+
+  .admin-actions > a,
+  .admin-actions > button,
+  .admin-mobile-resource-actions .admin-secondary-btn,
+  .admin-mobile-resource-actions .admin-danger-btn,
+  .admin-mobile-contact-actions .admin-secondary-btn,
+  .admin-mobile-contact-actions .admin-danger-btn {
+    font-size: max(0.8rem, 12.8px) !important;
+    line-height: 1.15 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-mobile-profile .admin-user-info span {
+    font-size: max(0.66rem, 10.8px) !important;
+  }
+}
+
+/* Final overview summary cards: colorful scan-friendly dashboard tiles. */
+.admin-page[data-admin-section="overview"] .admin-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(128px, 1fr)) !important;
+  gap: 14px !important;
+  margin-bottom: 20px !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card {
+  --summary-accent: #3b82f6;
+  --summary-accent-soft: rgba(59, 130, 246, 0.14);
+  --summary-accent-glow: rgba(59, 130, 246, 0.34);
+  position: relative;
+  min-height: 166px !important;
+  padding: 18px 16px 16px !important;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.92) !important;
+  border-radius: 8px !important;
+  background:
+    radial-gradient(circle at 84% 8%, rgba(255, 255, 255, 0.86), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), #ffffff 62%, #f8fafc 100%) !important;
+  box-shadow:
+    0 16px 32px rgba(15, 23, 42, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  transform: none !important;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 14px;
+  background:
+    linear-gradient(90deg, transparent, var(--summary-accent), transparent),
+    linear-gradient(90deg, var(--summary-accent-soft), rgba(255, 255, 255, 0.7));
+  box-shadow: 0 8px 20px var(--summary-accent-glow);
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card::after {
+  content: "";
+  position: absolute;
+  inset: 22px 0 auto auto;
+  width: 78px;
+  height: 78px;
+  border-radius: 999px 0 0 999px;
+  background: linear-gradient(135deg, transparent, var(--summary-accent-soft));
+  opacity: 0.58;
+  pointer-events: none;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: color-mix(in srgb, var(--summary-accent), white 58%) !important;
+  box-shadow:
+    0 22px 44px rgba(15, 23, 42, 0.12),
+    0 0 0 1px var(--summary-accent-soft) inset !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card-header {
+  position: relative;
+  z-index: 1;
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start !important;
+  justify-content: start !important;
+  margin-bottom: 8px !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card-icon {
+  order: -1;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 8px !important;
+  color: var(--summary-accent) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.86)),
+    var(--summary-accent-soft) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 10px 22px var(--summary-accent-soft),
+    0 1px 0 rgba(255, 255, 255, 0.95) inset;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card:hover .admin-summary-card-icon {
+  color: var(--summary-accent) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.9)),
+    var(--summary-accent-soft) !important;
+  transform: translateY(-1px);
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card-icon svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card span {
+  color: var(--summary-accent) !important;
+  font-size: 0.75rem !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 6px !important;
+  color: #0f172a !important;
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(2.05rem, 2.4vw, 2.7rem) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+  letter-spacing: 0 !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card small {
+  position: relative;
+  z-index: 1;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px !important;
+  color: #64748b !important;
+  font-size: 0.75rem !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card small::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--summary-accent);
+  box-shadow: 0 0 0 3px var(--summary-accent-soft);
+}
+
+.admin-summary-card.is-blue {
+  --summary-accent: #3b82f6;
+  --summary-accent-soft: rgba(59, 130, 246, 0.14);
+  --summary-accent-glow: rgba(59, 130, 246, 0.34);
+}
+
+.admin-summary-card.is-violet {
+  --summary-accent: #8b5cf6;
+  --summary-accent-soft: rgba(139, 92, 246, 0.14);
+  --summary-accent-glow: rgba(139, 92, 246, 0.32);
+}
+
+.admin-summary-card.is-cyan {
+  --summary-accent: #06b6d4;
+  --summary-accent-soft: rgba(6, 182, 212, 0.14);
+  --summary-accent-glow: rgba(6, 182, 212, 0.32);
+}
+
+.admin-summary-card.is-amber {
+  --summary-accent: #f59e0b;
+  --summary-accent-soft: rgba(245, 158, 11, 0.16);
+  --summary-accent-glow: rgba(245, 158, 11, 0.34);
+}
+
+.admin-summary-card.is-rose {
+  --summary-accent: #fb7185;
+  --summary-accent-soft: rgba(251, 113, 133, 0.15);
+  --summary-accent-glow: rgba(251, 113, 133, 0.32);
+}
+
+.admin-summary-card.is-lime {
+  --summary-accent: #84cc16;
+  --summary-accent-soft: rgba(132, 204, 22, 0.16);
+  --summary-accent-glow: rgba(132, 204, 22, 0.32);
+}
+
+@media (max-width: 1280px) {
+  .admin-page[data-admin-section="overview"] .admin-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-page[data-admin-section="overview"] .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card {
+    min-height: 126px !important;
+    padding: 14px 12px 12px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card::before {
+    height: 10px;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card-header {
+    gap: 10px;
+    margin-bottom: 4px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card span {
+    font-size: max(0.68rem, 11px) !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card strong {
+    margin-top: 4px !important;
+    font-size: clamp(1.7rem, 8vw, 2.2rem) !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card small {
+    margin-top: 10px !important;
+    font-size: max(0.68rem, 11px) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-page[data-admin-section="overview"] .admin-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card {
+    min-height: 116px !important;
+  }
+}
+
+/* Closer to the requested overview-card reference. */
+.admin-page[data-admin-section="overview"] .admin-summary-grid {
+  grid-template-columns: repeat(6, minmax(118px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card {
+  min-height: 158px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  padding: 18px 16px 14px !important;
+  border-radius: 7px !important;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.98) 42%, #f9fbff 100%) !important;
+  box-shadow:
+    0 18px 30px rgba(15, 23, 42, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.95) inset !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card::before {
+  height: 12px !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0), var(--summary-accent), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, color-mix(in srgb, var(--summary-accent), white 46%), rgba(255, 255, 255, 0.18)) !important;
+  opacity: 0.78;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card::after {
+  inset: 14px -12px auto auto !important;
+  width: 100px !important;
+  height: 68px !important;
+  border-radius: 999px 0 0 999px !important;
+  background: radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.9), var(--summary-accent-soft) 52%, transparent 72%) !important;
+  opacity: 0.74 !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card-header {
+  width: 100% !important;
+  display: contents !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card-icon {
+  order: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  margin: 2px 0 20px !important;
+  flex: 0 0 auto !important;
+  border-radius: 8px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.88)),
+    var(--summary-accent-soft) !important;
+  box-shadow: 0 8px 18px var(--summary-accent-soft) !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card span {
+  order: 1 !important;
+  min-height: 14px !important;
+  margin: 0 0 12px !important;
+  color: var(--summary-accent) !important;
+  font-size: 0.72rem !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+  letter-spacing: 0.035em !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card strong {
+  order: 2 !important;
+  margin: 0 !important;
+  font-size: clamp(2rem, 2vw, 2.45rem) !important;
+  line-height: 0.95 !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card small {
+  order: 3 !important;
+  margin-top: auto !important;
+  padding-top: 14px !important;
+  font-size: 0.72rem !important;
+  line-height: 1.2 !important;
+}
+
+.admin-page[data-admin-section="overview"] .admin-summary-card:hover {
+  transform: translateY(-3px) !important;
+}
+
+@media (max-width: 1360px) {
+  .admin-page[data-admin-section="overview"] .admin-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-page[data-admin-section="overview"] .admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card {
+    min-height: 128px !important;
+    padding: 14px 12px 12px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card-icon {
+    width: 32px !important;
+    height: 32px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card span {
+    margin-bottom: 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card strong {
+    font-size: clamp(1.75rem, 7vw, 2.15rem) !important;
+  }
+
+  .admin-page[data-admin-section="overview"] .admin-summary-card small {
+    padding-top: 10px !important;
+    font-size: 0.68rem !important;
+  }
+}
+
+/* Final admin mobile header: keep account name/role readable beside the menu button. */
+@media (max-width: 900px) {
+  .admin-sidebar-top {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .admin-brand {
+    flex: 0 0 132px !important;
+    min-width: 132px !important;
+    max-width: 132px !important;
+    gap: 7px !important;
+    margin-right: auto !important;
+  }
+
+  .admin-brand img {
+    width: 48px !important;
+  }
+
+  .admin-brand span {
+    min-width: 0 !important;
+    padding-left: 8px !important;
+  }
+
+  .admin-brand span::after {
+    font-size: 0.84rem !important;
+  }
+
+  .admin-mobile-profile {
+    flex: 0 1 auto !important;
+    width: fit-content !important;
+    min-width: 128px !important;
+    max-width: min(178px, 42vw) !important;
+    margin-left: 0 !important;
+  }
+
+  .admin-mobile-profile .admin-user-profile {
+    height: 44px !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    padding: 5px 9px !important;
+  }
+
+  .admin-mobile-profile .admin-avatar-wrap {
+    width: 32px !important;
+    height: 32px !important;
+    flex-basis: 32px !important;
+  }
+
+  .admin-mobile-profile .admin-user-profile-header {
+    gap: 7px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info {
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+    width: max-content !important;
+    max-width: 92px !important;
+  }
+
+  .admin-mobile-profile .admin-user-info strong {
+    font-size: 0.78rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .admin-mobile-profile .admin-user-info span {
+    max-width: none !important;
+    font-size: 0.66rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .admin-mobile-menu-toggle {
+    flex: 0 0 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-brand {
+    flex-basis: 138px !important;
+    min-width: 138px !important;
+    max-width: 138px !important;
+  }
+
+  .admin-brand img {
+    width: 46px !important;
+  }
+
+  .admin-brand span {
+    min-width: 58px !important;
+    padding-left: 8px !important;
+  }
+
+  .admin-brand span::after {
+    font-size: 0.8rem !important;
+  }
+
+  .admin-mobile-profile {
+    min-width: 120px !important;
+    max-width: min(156px, 39vw) !important;
+  }
+
+  .admin-mobile-profile .admin-user-info {
+    max-width: 86px !important;
+  }
+
+  .admin-mobile-menu-toggle {
+    flex-basis: 42px !important;
+    width: 42px !important;
+    height: 42px !important;
   }
 }

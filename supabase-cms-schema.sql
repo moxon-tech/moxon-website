@@ -5,6 +5,10 @@
 -- Cleanup legacy RPC functions (no longer needed after SDK rewrite).
 drop function if exists public.moxon_admin_contact_messages();
 drop function if exists public.moxon_admin_activity_logs(integer);
+drop function if exists public.moxon_is_admin() cascade;
+
+-- Cleanup old admin whitelist table after switching back to Supabase Auth-only admin access.
+drop table if exists public.admin_users;
 
 create table if not exists public.cms_sections (
   section_key text primary key,
@@ -80,7 +84,6 @@ grant select on table public.cms_sections to anon, authenticated;
 grant insert, update, delete on table public.cms_sections to authenticated;
 grant insert on table public.contact_messages to anon;
 grant select, insert, update, delete on table public.contact_messages to authenticated;
-grant insert on table public.admin_activity_logs to anon;
 grant select, insert, update, delete on table public.admin_activity_logs to authenticated;
 grant select on table public.product_categories to anon, authenticated;
 grant insert, update, delete on table public.product_categories to authenticated;
@@ -139,6 +142,7 @@ with check (true);
 drop policy if exists "Public can read CMS sections" on public.cms_sections;
 drop policy if exists "Authenticated users can manage CMS sections" on public.cms_sections;
 drop policy if exists "Public can submit contact messages" on public.contact_messages;
+drop policy if exists "Authenticated admins can insert contact messages" on public.contact_messages;
 drop policy if exists "Authenticated users can read contact messages" on public.contact_messages;
 drop policy if exists "Authenticated users can update contact messages" on public.contact_messages;
 drop policy if exists "Authenticated users can delete contact messages" on public.contact_messages;
@@ -164,6 +168,25 @@ create policy "Public can submit contact messages"
 on public.contact_messages
 for insert
 to anon, authenticated
+with check (
+  type in ('contact', 'application')
+  and length(coalesce(id, '')) between 8 and 80
+  and length(coalesce(name, '')) <= 200
+  and length(coalesce(phone, '')) <= 50
+  and length(coalesce(email, '')) <= 200
+  and length(coalesce(company, '')) <= 200
+  and length(coalesce(service, '')) <= 250
+  and length(coalesce(message, '')) <= 5000
+  and (
+    nullif(phone, '') is not null
+    or nullif(email, '') is not null
+  )
+);
+
+create policy "Authenticated admins can insert contact messages"
+on public.contact_messages
+for insert
+to authenticated
 with check (true);
 
 create policy "Authenticated users can read contact messages"
@@ -195,12 +218,6 @@ create policy "Authenticated users can insert admin activity logs"
 on public.admin_activity_logs
 for insert
 to authenticated
-with check (true);
-
-create policy "Public can insert contact activity logs"
-on public.admin_activity_logs
-for insert
-to anon, authenticated
 with check (true);
 
 -- Normalize old public activity logs that were stored without Vietnamese accents.

@@ -2,6 +2,27 @@
   const fallbackData = window.MOXON_DATA || {};
   const supabaseClient = window.MOXON_SUPABASE_CLIENT || null;
   const supabaseConfig = window.MOXON_SUPABASE_CONFIG || {};
+  const adminUtils = window.MOXON_ADMIN_UTILS || {};
+  const {
+    dataUrlToBlob,
+    decodeJwtPayload,
+    deepClone,
+    deepMerge,
+    readLocalJson,
+    slugify,
+    writeLocalJson
+  } = adminUtils;
+  const adminStorage = window.MOXON_ADMIN_STORAGE?.createAdminStorage?.({
+    supabaseClient,
+    supabaseConfig,
+    slugify,
+    dataUrlToBlob
+  }) || {};
+  const {
+    deleteStorageRefsNoLongerUsed = async () => 0,
+    uploadCmsImagesInValue = async (value) => value,
+    uploadProductImageIfNeeded = async (record) => record
+  } = adminStorage;
   const remoteCatalogKeys = new Set(["productCategories", "products"]);
   const remoteCmsSectionKeys = new Set([
     "company",
@@ -107,37 +128,10 @@
     mobileMenuToggle?.setAttribute("aria-label", isOpen ? "Đóng menu quản trị" : "Mở menu quản trị");
   };
 
-  const deepClone = (value) => JSON.parse(JSON.stringify(value));
-  const isPlainObject = (value) => value && typeof value === "object" && !Array.isArray(value);
-  const deepMerge = (target, source) => {
-    if (Array.isArray(target) && Array.isArray(source)) return source;
-    if (isPlainObject(target) && isPlainObject(source)) {
-      return Object.keys({ ...target, ...source }).reduce((merged, key) => {
-        merged[key] = key in source ? deepMerge(target[key], source[key]) : target[key];
-        return merged;
-      }, {});
-    }
-    return source === undefined ? target : source;
-  };
   const useClassicLocalAdmin = false;
   const LOCAL_DATA_KEY = "moxon_admin_data";
   const LOCAL_LOGS_KEY = "moxon_admin_logs";
   const LOCAL_EMAIL_KEY = "moxon_admin_email";
-  const readLocalJson = (key, fallbackValue = null) => {
-    try {
-      const rawValue = window.localStorage?.getItem(key);
-      return rawValue ? JSON.parse(rawValue) : fallbackValue;
-    } catch {
-      return fallbackValue;
-    }
-  };
-  const writeLocalJson = (key, value) => {
-    try {
-      window.localStorage?.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.warn(`Không lưu được ${key} vào localStorage.`, error);
-    }
-  };
   const getProfileStorageKey = (email = currentAuthUser?.email || "") =>
     `moxon_admin_profile_${String(email || "default").toLowerCase()}`;
   const readLocalAdminProfile = () => {
@@ -170,22 +164,6 @@
   let activeCropAspectRatio = 4 / 3;
   const MAX_UPLOAD_FILE_SIZE = 12 * 1024 * 1024;
   const MAX_DATA_IMAGE_LENGTH = 2.4 * 1024 * 1024;
-
-  const slugify = (text) => {
-    if (!text) return "";
-    return text
-      .toString()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[đĐ]/g, "d")
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w\-]+/g, "")
-      .replace(/\-\-+/g, "-")
-      .replace(/^-+/, "")
-      .replace(/-+$/, "");
-  };
 
   const getData = () => deepClone(data || fallbackData);
 
@@ -274,164 +252,6 @@
     created_at: record.createdAt || new Date().toISOString()
   });
 
-  const dataUrlToBlob = (dataUrl) => {
-    const [meta, content] = String(dataUrl).split(",");
-    const mime = meta.match(/data:(.*?);base64/)?.[1] || "image/jpeg";
-    const binary = atob(content || "");
-    const bytes = new Uint8Array(binary.length);
-    for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-    return new Blob([bytes], { type: mime });
-  };
-
-  const getStorageNameHint = (value, fallback = "hinh-anh") => {
-    if (!value || typeof value !== "object") return slugify(fallback) || "hinh-anh";
-    return (
-      slugify(
-        value.title ||
-          value.name ||
-          value.displayName ||
-          value.legalName ||
-          value.id ||
-          value.alt ||
-          fallback
-      ) || slugify(fallback) || "hinh-anh"
-    );
-  };
-
-  const uploadProductImageIfNeeded = async (record) => {
-    if (!supabaseClient || !String(record.image || "").startsWith("data:image/")) return record;
-    const blob = dataUrlToBlob(record.image);
-    const ext = blob.type.includes("png") ? "png" : "jpg";
-    const nameHint = getStorageNameHint(record, "san-pham");
-    const idHint = slugify(record.id || nameHint) || nameHint;
-    const path = `products/${nameHint}-${idHint}-${Date.now()}.${ext}`;
-    const { error } = await supabaseClient.storage
-      .from(supabaseConfig.mediaBucket || "moxon-media")
-      .upload(path, blob, { upsert: true, contentType: blob.type });
-    if (error) throw error;
-    const { data: publicData } = supabaseClient.storage
-      .from(supabaseConfig.mediaBucket || "moxon-media")
-      .getPublicUrl(path);
-    return { ...record, image: publicData.publicUrl };
-  };
-
-  const uploadCmsImageValue = async (value, sectionKey = "cms", nameHint = "hinh-anh", fieldHint = "image") => {
-    if (!supabaseClient || !String(value || "").startsWith("data:image/")) return value;
-    const blob = dataUrlToBlob(value);
-    const ext = blob.type.includes("png") ? "png" : "jpg";
-    const safeSection = slugify(sectionKey) || "cms";
-    const safeName = slugify(nameHint) || safeSection;
-    const safeField = slugify(fieldHint) || "image";
-    const path = `${safeSection}/${safeName}-${safeField}-${Date.now()}.${ext}`;
-    const { error } = await supabaseClient.storage
-      .from(supabaseConfig.mediaBucket || "moxon-media")
-      .upload(path, blob, { upsert: true, contentType: blob.type });
-    if (error) throw error;
-    const { data: publicData } = supabaseClient.storage
-      .from(supabaseConfig.mediaBucket || "moxon-media")
-      .getPublicUrl(path);
-    return publicData.publicUrl;
-  };
-
-  const uploadCmsImagesInValue = async (value, sectionKey = "cms", nameHint = sectionKey, fieldHint = "image") => {
-    if (typeof value === "string") return uploadCmsImageValue(value, sectionKey, nameHint, fieldHint);
-    if (Array.isArray(value)) {
-      return Promise.all(
-        value.map((item, index) =>
-          uploadCmsImagesInValue(item, sectionKey, getStorageNameHint(item, `${sectionKey}-${index + 1}`), fieldHint)
-        )
-      );
-    }
-    if (value && typeof value === "object") {
-      const objectNameHint = getStorageNameHint(value, nameHint);
-      const entries = await Promise.all(
-        Object.entries(value).map(async ([key, childValue]) => [
-          key,
-          await uploadCmsImagesInValue(childValue, sectionKey, objectNameHint, key)
-        ])
-      );
-      return Object.fromEntries(entries);
-    }
-    return value;
-  };
-
-  const getStorageObjectRef = (value) => {
-    const rawValue = String(value || "").trim();
-    if (!rawValue || rawValue.startsWith("data:") || rawValue.startsWith("assets/")) return null;
-
-    const mediaBucket = supabaseConfig.mediaBucket || "moxon-media";
-    const privateBucket = supabaseConfig.privateBucket || "moxon-private";
-    const knownBuckets = [mediaBucket, privateBucket].filter(Boolean);
-
-    if (rawValue.startsWith("contact-attachments/")) {
-      return { bucket: privateBucket, path: rawValue };
-    }
-
-    for (const bucket of knownBuckets) {
-      if (rawValue.startsWith(`${bucket}/`)) {
-        return { bucket, path: rawValue.slice(bucket.length + 1) };
-      }
-    }
-
-    try {
-      const url = new URL(rawValue);
-      const publicMarker = "/storage/v1/object/public/";
-      const signedMarker = "/storage/v1/object/sign/";
-      const marker = url.pathname.includes(publicMarker) ? publicMarker : url.pathname.includes(signedMarker) ? signedMarker : "";
-      if (!marker) return null;
-
-      const objectPath = decodeURIComponent(url.pathname.slice(url.pathname.indexOf(marker) + marker.length));
-      const [bucket, ...pathParts] = objectPath.split("/");
-      if (!knownBuckets.includes(bucket) || !pathParts.length) return null;
-      return { bucket, path: pathParts.join("/") };
-    } catch {
-      return null;
-    }
-  };
-
-  const collectStorageObjectRefs = (value, refs = new Map()) => {
-    if (!value) return refs;
-    if (typeof value === "string") {
-      const ref = getStorageObjectRef(value);
-      if (ref) refs.set(`${ref.bucket}/${ref.path}`, ref);
-      return refs;
-    }
-    if (Array.isArray(value)) {
-      value.forEach((item) => collectStorageObjectRefs(item, refs));
-      return refs;
-    }
-    if (typeof value === "object") {
-      Object.values(value).forEach((item) => collectStorageObjectRefs(item, refs));
-    }
-    return refs;
-  };
-
-  const deleteStorageRefsNoLongerUsed = async (previousValue, nextData) => {
-    if (!supabaseClient) return 0;
-    const previousRefs = collectStorageObjectRefs(previousValue);
-    if (!previousRefs.size) return 0;
-
-    const stillUsedRefs = collectStorageObjectRefs(nextData);
-    const refsToDelete = Array.from(previousRefs.values()).filter((ref) => !stillUsedRefs.has(`${ref.bucket}/${ref.path}`));
-    if (!refsToDelete.length) return 0;
-
-    const refsByBucket = refsToDelete.reduce((groups, ref) => {
-      if (!groups[ref.bucket]) groups[ref.bucket] = [];
-      groups[ref.bucket].push(ref.path);
-      return groups;
-    }, {});
-
-    let deletedCount = 0;
-    await Promise.all(
-      Object.entries(refsByBucket).map(async ([bucket, paths]) => {
-        const { error } = await supabaseClient.storage.from(bucket).remove(paths);
-        if (error) throw error;
-        deletedCount += paths.length;
-      })
-    );
-    return deletedCount;
-  };
-
   const withTimeout = (promise, timeoutMs = 7000, label = "Supabase") => {
     let timeoutId;
     const timeoutPromise = new Promise((_, reject) => {
@@ -440,18 +260,6 @@
     return Promise.race([promise, timeoutPromise]).finally(() => window.clearTimeout(timeoutId));
   };
   const runWithDeadline = (promise, timeoutMs, label) => withTimeout(promise, timeoutMs, label);
-
-  const decodeJwtPayload = (token) => {
-    try {
-      const payload = String(token || "").split(".")[1];
-      if (!payload) return {};
-      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-      return JSON.parse(atob(padded));
-    } catch {
-      return {};
-    }
-  };
 
   const sdkQuery = async (queryPromise, label = "Supabase") => {
     const result = await withTimeout(queryPromise, 20000, label);
@@ -807,17 +615,17 @@
     const date = new Date(isDateOnly ? trimmed + "T00:00:00" : trimmed);
     if (Number.isNaN(date.getTime())) return { time: formatDate(isoStr), day: "" };
     const now = new Date();
-    
+
     // So sánh ngày theo giờ địa phương
     const dateString = new Date(date.getFullYear(), date.getMonth(), date.getDate()).toDateString();
     const todayString = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString();
     const yesterdayDate = new Date(now);
     yesterdayDate.setDate(now.getDate() - 1);
     const yesterdayString = new Date(yesterdayDate.getFullYear(), yesterdayDate.getMonth(), yesterdayDate.getDate()).toDateString();
-    
+
     const isToday = dateString === todayString;
     const isYesterday = dateString === yesterdayString;
-    
+
     const day = isToday ? "Hôm nay" : isYesterday ? "Hôm qua" : `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
     if (isDateOnly) {
       return { time: "", day };
@@ -871,7 +679,7 @@
       const query = searchInput?.value.toLowerCase().trim() || "";
       const filterValue = filterSelect?.value || "";
       const rows = Array.from(container.querySelectorAll(`${tableSelector} tbody tr`));
-      
+
       if (rows.length === 0 || rows[0].querySelector(".admin-empty-note")) {
         if (paginationContainer) {
           paginationContainer.innerHTML = "";
@@ -1055,7 +863,7 @@
 
     const toast = document.createElement("div");
     toast.className = `admin-toast is-${type}`;
-    
+
     let icon = "i";
     if (type === "success") icon = "✓";
     if (type === "error") icon = "×";
@@ -1610,19 +1418,19 @@
     }
 
     const summaryCards = [
-      { key: "news", label: "Tin tức", value: countItems("news"), note: `${activeCount("news")} đang hiển thị` },
-      { key: "products", label: "Sản phẩm", value: countItems("products"), note: `${activeCount("products")} đang hiển thị` },
-      { key: "services", label: "Dịch vụ", value: countItems("services"), note: `${activeCount("services")} đang hiển thị` },
-      { key: "jobs", label: "Ứng tuyển", value: countItems("jobs"), note: `${activeCount("jobs")} vị trí đang bật` },
-      { key: "contactMessages", label: "Liên hệ", value: countItems("contactMessages"), note: "Yêu cầu từ khách hàng" },
-      { key: "partners", label: "Đối tác", value: countItems("partners"), note: `${activeCount("partners")} đang hiển thị` }
+      { key: "news", tone: "blue", label: "Tin tức", value: countItems("news"), note: `${activeCount("news")} đang hiển thị` },
+      { key: "products", tone: "violet", label: "Sản phẩm", value: countItems("products"), note: `${activeCount("products")} đang hiển thị` },
+      { key: "services", tone: "cyan", label: "Dịch vụ", value: countItems("services"), note: `${activeCount("services")} đang hiển thị` },
+      { key: "jobs", tone: "amber", label: "Ứng tuyển", value: countItems("jobs"), note: `${activeCount("jobs")} vị trí đang bật` },
+      { key: "contactMessages", tone: "rose", label: "Liên hệ", value: countItems("contactMessages"), note: "Yêu cầu từ khách hàng" },
+      { key: "partners", tone: "lime", label: "Đối tác", value: countItems("partners"), note: `${activeCount("partners")} mới cập nhật` }
     ];
 
     summary.innerHTML = summaryCards
       .map((card) => {
         const icon = sectionIcons[card.key] || "";
         return `
-          <article class="admin-summary-card" data-section-jump="${card.key}" style="cursor: pointer;">
+          <article class="admin-summary-card is-${card.tone}" data-summary-tone="${card.tone}" data-section-jump="${card.key}" style="cursor: pointer;">
             <div class="admin-summary-card-header">
               <span>${card.label}</span>
               <div class="admin-summary-card-icon">${icon}</div>
@@ -1640,24 +1448,27 @@
         render();
       });
 
+      card.style.transformStyle = "";
+      card.style.backfaceVisibility = "";
+
       // Hiệu ứng tương tác nghiêng 3D (3D Card Tilt)
       card.addEventListener("mousemove", (e) => {
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
+
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        
+
         // Nghiêng tối đa 8 độ
         const rotateX = ((centerY - y) / centerY) * 8;
         const rotateY = ((x - centerX) / centerX) * 8;
-        
+
         card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`;
         card.style.transition = "transform 0.08s ease";
         card.style.boxShadow = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)";
       });
-      
+
       card.style.transformStyle = "preserve-3d";
       card.style.backfaceVisibility = "hidden";
 
@@ -1700,25 +1511,22 @@
       const currentRole = currentAdmin.role;
       const currentAvatar = currentAdmin.avatar;
       const initials = currentName.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase() || "AD";
-      
+
       const largeAvatarHtml = `
         <img id="profile-avatar-preview" src="${currentAvatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: ${currentAvatar ? 'block' : 'none'};" alt="Avatar">
         <div id="profile-avatar-initials" style="width: 100%; height: 100%; display: ${currentAvatar ? 'none' : 'flex'}; align-items: center; justify-content: center;">${escapeHtml(initials)}</div>
       `;
-      
+
       body.innerHTML = `
         <form id="admin-profile-form" class="admin-form" style="padding: 10px 0;">
-          <input type="hidden" id="profile-avatar-data" value="${escapeHtml(currentAvatar)}">
           <div class="admin-profile-card" style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px; text-align: center;">
-            <div id="profile-avatar-container" style="width: 68px; height: 68px; border-radius: 50%; background: var(--accent-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; margin: 0 auto 12px; box-shadow: 0 4px 10px rgba(16,185,129,0.2); border: 3px solid #ffffff; overflow: hidden; position: relative; cursor: pointer;" title="Bấm để đổi ảnh đại diện">
+            <div id="profile-avatar-container" style="width: 68px; height: 68px; border-radius: 50%; background: var(--accent-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 700; margin: 0 auto 12px; box-shadow: 0 4px 10px rgba(16,185,129,0.2); border: 3px solid #ffffff; overflow: hidden; position: relative;">
               ${largeAvatarHtml}
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 0.55rem; padding: 2px 0; font-weight: bold; opacity: 0; transition: opacity 0.2s;" id="avatar-hover-label">ĐỔI ẢNH</div>
             </div>
             <h4 style="margin: 0; font-size: 1.1rem; color: var(--text-main); font-weight: 700;">${escapeHtml(currentName)}</h4>
             <span class="admin-badge is-success" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border: none; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-top: 8px; display: inline-block;">${escapeHtml(currentRole)}</span>
-            <input type="file" id="profile-avatar-file" accept="image/*" style="display: none;">
           </div>
-          
+
           <div style="display: grid; gap: 16px;">
             <label style="display: grid; gap: 6px; font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
               Tên hiển thị
@@ -1736,51 +1544,15 @@
           <button type="submit" class="admin-primary-btn" style="width: 100%; padding: 12px; margin-top: 24px; background: var(--accent-green); color: white;">Lưu thay đổi</button>
         </form>
       `;
-      
-      const avatarContainer = document.getElementById("profile-avatar-container");
-      const avatarFile = document.getElementById("profile-avatar-file");
-      const avatarDataInput = document.getElementById("profile-avatar-data");
-      const previewImg = document.getElementById("profile-avatar-preview");
-      
-      avatarContainer?.addEventListener("mouseenter", () => {
-        const label = document.getElementById("avatar-hover-label");
-        if (label) label.style.opacity = "1";
-      });
-      avatarContainer?.addEventListener("mouseleave", () => {
-        const label = document.getElementById("avatar-hover-label");
-        if (label) label.style.opacity = "0";
-      });
-      avatarContainer?.addEventListener("click", () => {
-        avatarFile?.click();
-      });
 
-      avatarFile?.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          openCropperModal(event.target.result, avatarDataInput, previewImg, 1);
-        };
-        reader.readAsDataURL(file);
-      });
-
-      avatarDataInput?.addEventListener("input", () => {
-        if (avatarDataInput.value) {
-          previewImg.src = avatarDataInput.value;
-          previewImg.style.display = "block";
-          const initialsDiv = document.getElementById("profile-avatar-initials");
-          if (initialsDiv) initialsDiv.style.display = "none";
-        }
-      });
-      
       const form = document.getElementById("admin-profile-form");
       form?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const newName = document.getElementById("profile-name").value.trim();
         const newEmail = document.getElementById("profile-email").value.trim();
         const newRole = document.getElementById("profile-role").value.trim();
-        const newAvatar = document.getElementById("profile-avatar-data").value;
-        
+        const existingAvatar = currentAdmin.avatar || "";
+
         if (!newName || !newEmail || !newRole) {
           showToast("Vui lòng nhập đủ tên, email và vai trò.", "error");
           return;
@@ -1792,7 +1564,7 @@
               name: newName,
               email: newEmail,
               role: newRole,
-              avatar: newAvatar || ""
+              avatar: existingAvatar
             });
             await addActivityLog("Cập nhật", "Tài khoản", `Đổi tên: ${newName}, Chức vụ: ${newRole}, Email: ${newEmail}`);
             renderNav();
@@ -1808,7 +1580,7 @@
               name: newName,
               role: newRole,
               contactEmail: newEmail,
-              avatar: newAvatar || ""
+              avatar: existingAvatar
             }
           });
           if (updateUserError) {
@@ -1839,7 +1611,7 @@
         console.warn("Không tải được nhật ký hoạt động.", error);
       }
       const logs = activityLogs;
-      
+
       if (logs.length === 0) {
         body.innerHTML = `
           <div class="admin-empty-state admin-empty-state-compact" style="padding: 30px 20px; text-align: center;">
@@ -1859,7 +1631,7 @@
             const actorName = log.actorName || getCurrentAdmin().name;
             const actorRole = log.actorRole || "";
             const titleText = formatActivityTitle(log);
-            
+
             return `
               <div style="padding: 10px 14px; border-left: 3px solid ${leftBorderColor}; background: rgba(0,0,0,0.02); border-radius: 0 4px 4px 0;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom: 4px;">
@@ -1881,12 +1653,12 @@
     const modal = document.getElementById("admin-general-modal");
     const closeBtn = document.getElementById("admin-modal-close-btn");
     if (!modal || !closeBtn) return;
-    
+
     closeBtn.addEventListener("click", () => {
       modal.classList.remove("is-active");
       modal.setAttribute("aria-hidden", "true");
     });
-    
+
     window.addEventListener("click", (e) => {
       if (e.target === modal) {
         modal.classList.remove("is-active");
@@ -2050,7 +1822,7 @@
           </div>
           <svg class="admin-profile-arrow" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="margin-left: auto; transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
-        
+
         <div class="admin-profile-menu-panel" data-admin-profile-dropdown style="display: none;">
           <button type="button" class="admin-profile-menu-item" data-profile-action="info">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -2133,7 +1905,7 @@
           <h2>${schema.heading}</h2>
           <p class="admin-muted">${schema.note}</p>
         </div>
-        <button class="admin-primary-btn" type="button" data-save-form>Lưu thay đổi</button>
+        <button class="admin-primary-btn admin-form-save-action" type="button" data-save-form>Lưu thay đổi</button>
       </div>
       <form class="admin-form admin-structured-form">
         <div class="admin-form-grid">
@@ -2239,7 +2011,7 @@
           <h2>Chỉnh sửa nội dung trang giới thiệu</h2>
           <p class="admin-muted">Sửa nội dung hero và giá trị cốt lõi trên trang Giới thiệu.</p>
         </div>
-        <button class="admin-primary-btn" type="button" data-save-form>Lưu thay đổi</button>
+        <button class="admin-primary-btn admin-form-save-action" type="button" data-save-form>Lưu thay đổi</button>
       </div>
       <form class="admin-form admin-structured-form" data-about-page-form>
         <div class="admin-form-grid">
@@ -2533,7 +2305,7 @@
             <h2>${isCreating ? "Thêm mới" : "Chỉnh sửa"} ${config.singular}</h2>
             <p class="admin-muted">Bản ghi: <strong>${escapeHtml(editingRecord[config.titleKey] || editingRecord.title || editingRecord.name || "")}</strong></p>
           </div>
-          <div class="admin-actions">
+          <div class="admin-actions admin-form-actions">
             <button class="admin-secondary-btn" type="button" data-back-to-list="${section.key}">Hủy</button>
             <button class="admin-primary-btn" type="button" data-submit-list-form>${isCreating ? "Lưu" : "Lưu thay đổi"}</button>
           </div>
@@ -2547,6 +2319,51 @@
 
       return;
     }
+
+    const mobileListCards = records.length
+      ? records.map((record, index) => {
+          const title = record[config.titleKey] || record.title || record.name || `${section.label} ${index + 1}`;
+          const subtitle = record[config.subtitleKey] || record.date || record.url || "";
+          const image = config.imageKey ? record[config.imageKey] : "";
+          const statusText = record.active === false ? "Ẩn" : "Hiển thị";
+          const sortText = record.sortOrder || index + 1;
+          const searchText = [
+            title,
+            subtitle,
+            statusText,
+            sortText,
+            record.id,
+            record.description,
+            record.summary,
+            record.label
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          return `
+            <article class="admin-mobile-resource-card" data-mobile-list-card data-search="${escapeHtml(searchText)}">
+              <div class="admin-mobile-resource-main ${config.imageKey ? "" : "is-no-thumb"}">
+                ${config.imageKey ? `<img src="${escapeHtml(imageSrc(image))}" class="admin-mobile-resource-thumb" alt="${escapeHtml(title)}">` : ""}
+                <div class="admin-mobile-resource-info">
+                  <strong>${escapeHtml(title)}</strong>
+                  <span>${escapeHtml(subtitle || record.id || section.label)}</span>
+                </div>
+                <span class="admin-badge ${record.active === false ? "is-gray" : "is-success"}">${statusText}</span>
+              </div>
+
+              <div class="admin-mobile-resource-meta">
+                <span>${escapeHtml(section.label)}</span>
+                <span>Thứ tự ${escapeHtml(sortText)}</span>
+                ${subtitle ? `<span>${escapeHtml(subtitle)}</span>` : ""}
+              </div>
+
+              <div class="admin-mobile-resource-actions">
+                <button class="admin-secondary-btn" type="button" data-edit-list-record="${index}">Sửa</button>
+                <button class="admin-secondary-btn" type="button" data-toggle-list-record="${index}">${record.active === false ? "Hiện" : "Ẩn"}</button>
+                <button class="admin-danger-btn" type="button" data-delete-list-record="${index}">Xóa</button>
+              </div>
+            </article>
+          `;
+        }).join("")
+      : `<div class="admin-empty-note admin-mobile-resource-empty">Chưa có ${config.singular} nào.</div>`;
 
     editor.innerHTML = `
       <div class="admin-editor-head">
@@ -2566,7 +2383,12 @@
         </div>
       </div>
 
-      <div class="admin-table-container">
+      <div class="admin-mobile-resource-list admin-mobile-list-records" data-mobile-list-records>
+        ${mobileListCards}
+        <div class="admin-empty-note admin-mobile-resource-empty" data-mobile-list-empty hidden>Không tìm thấy bản ghi phù hợp.</div>
+      </div>
+
+      <div class="admin-table-container admin-list-table-container">
         <div class="admin-table-wrapper">
           <table class="admin-table" data-list-table>
             <thead>
@@ -2585,7 +2407,7 @@
                 const title = record[config.titleKey] || record.title || record.name || `${section.label} ${index + 1}`;
                 const subtitle = record[config.subtitleKey] || record.date || record.url || "";
                 const image = config.imageKey ? record[config.imageKey] : "";
-                
+
                 return `
                   <tr>
                     <td>${index + 1}</td>
@@ -2629,6 +2451,20 @@
     `;
 
     setupTablePaginationAndFilters(editor, "[data-list-table]", "[data-table-search-input]");
+    const applyMobileListFilters = () => {
+      const query = (editor.querySelector("[data-table-search-input]")?.value || "").trim().toLowerCase();
+      const cards = Array.from(editor.querySelectorAll("[data-mobile-list-card]"));
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const isVisible = !query || (card.dataset.search || "").includes(query);
+        card.hidden = !isVisible;
+        if (isVisible) visibleCount += 1;
+      });
+      const empty = editor.querySelector("[data-mobile-list-empty]");
+      if (empty) empty.hidden = !cards.length || visibleCount > 0;
+    };
+    editor.querySelector("[data-table-search-input]")?.addEventListener("input", applyMobileListFilters);
+    applyMobileListFilters();
   };
 
   const renderListRecordForm = (section, config, record, index) => `
@@ -2754,7 +2590,7 @@
       record.rawFields?.attachmentPath ||
       record.rawFields?.cvPath ||
       "";
-    
+
     let dateStr = "Chưa rõ";
     if (record.createdAt) {
       try {
@@ -2832,7 +2668,7 @@
           </div>
           <span class="admin-badge is-success" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border: none; padding: 4px 12px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;">Đã xem</span>
         </div>
-        
+
         <div style="display: grid; gap: 12px;">
           <div style="display: grid; grid-template-columns: 130px 1fr; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; font-size: 0.85rem;">
             <span style="font-weight: 700; color: var(--text-muted);">Loại yêu cầu</span>
@@ -2861,12 +2697,12 @@
             <span style="color: var(--text-main); font-weight: 600;">${escapeHtml(service)}</span>
           </div>
           `}
-          
+
           <div style="display: grid; gap: 4px; padding: 10px 12px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.85rem;">
             <span style="font-weight: 700; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Nội dung lời nhắn</span>
             <div style="color: var(--text-main); white-space: pre-line; line-height: 1.5; margin-top: 2px;">${escapeHtml(message)}</div>
           </div>
-          
+
           <div style="display: grid; gap: 4px; padding: 10px 12px; background: #ffffff; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.85rem;">
             <span style="font-weight: 700; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Tệp đính kèm / Hồ sơ CV</span>
             <div>${attachmentHtml}</div>
@@ -2889,12 +2725,79 @@
   const renderContactMessagesEditor = (section) => {
     data = getData();
     const records = Array.isArray(data.contactMessages) ? data.contactMessages : [];
+    const mobileContactCards = records.length
+      ? records.map((record, index) => {
+          const rawFields = record.rawFields && typeof record.rawFields === "object" ? record.rawFields : {};
+          const isApplication = record.type === "application" || record.type === "recruitment";
+          const displayName = record.name || record.fullName || rawFields.name || rawFields.ho_ten || "Khách ẩn";
+          const displayPhone = record.phone || rawFields.phone || rawFields.dien_thoai || "";
+          const displayEmail = record.email || rawFields.email || "";
+          const typeLabel = isApplication ? "Ứng tuyển" : "Liên hệ";
+          const statusLabel = record.seen ? "Đã xem" : "Chưa xem";
+          const timeInfo = formatActivityTime(String(record.createdAt || record.created_at || record.date || ""));
+          const searchText = [
+            displayName,
+            displayPhone,
+            displayEmail,
+            typeLabel,
+            statusLabel,
+            record.message,
+            record.service,
+            record.position,
+            rawFields.message,
+            rawFields.service,
+            rawFields.vi_tri
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          return `
+            <article class="admin-mobile-contact-card" data-mobile-message-card data-seen="${record.seen ? "seen" : "unseen"}" data-search="${escapeHtml(searchText)}">
+              <div class="admin-mobile-contact-main">
+                <div class="admin-contact-avatar-wrapper">
+                  <div class="admin-contact-avatar">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span class="admin-contact-status-dot"></span>
+                  </div>
+                </div>
+
+                <div class="admin-mobile-contact-info">
+                  <strong>${escapeHtml(displayName)}</strong>
+                  <span class="admin-contact-type is-${isApplication ? "apply" : "contact"}">
+                    ${
+                      isApplication
+                        ? `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`
+                        : `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg>`
+                    }
+                    ${typeLabel}
+                  </span>
+                  <span class="admin-contact-badge is-${record.seen ? "seen" : "unseen"}">${statusLabel}</span>
+                </div>
+
+                <time class="admin-mobile-contact-time">
+                  ${timeInfo.time
+                    ? `<strong>${escapeHtml(timeInfo.time)}</strong><span>${escapeHtml(timeInfo.day)}</span>`
+                    : `<strong>${escapeHtml(timeInfo.day || "Chưa rõ")}</strong>`
+                  }
+                </time>
+              </div>
+
+              <div class="admin-mobile-contact-actions">
+                <button class="admin-secondary-btn" type="button" data-view-message="${index}">Chi tiết</button>
+                <button class="admin-secondary-btn" type="button" data-toggle-message="${index}">${record.seen ? "Chưa xem" : "Đã xem"}</button>
+                <button class="admin-danger-btn" type="button" data-delete-message="${index}">Xóa</button>
+              </div>
+            </article>
+          `;
+        }).join("")
+      : `<div class="admin-empty-note admin-mobile-contact-empty">Chưa có yêu cầu liên hệ/ứng tuyển nào.</div>`;
     editor.innerHTML = `
       <div class="admin-editor-head">
         <div>
           <p class="admin-kicker">${section.label}</p>
           <h2>${records.length} yêu cầu đang lưu</h2>
-          <p class="admin-muted">Danh sách yêu cầu liên hệ / tuyển dụng của MOXON Tech dạng bảng B2B.</p>
+          <p class="admin-muted">Danh sách yêu cầu liên hệ / tuyển dụng.</p>
         </div>
       </div>
 
@@ -2909,7 +2812,12 @@
         </div>
       </div>
 
-      <div class="admin-table-container">
+      <div class="admin-mobile-contact-list" data-mobile-message-list>
+        ${mobileContactCards}
+        <div class="admin-empty-note admin-mobile-contact-empty" data-mobile-message-empty hidden>Không tìm thấy liên hệ phù hợp.</div>
+      </div>
+
+      <div class="admin-table-container admin-contact-table-container">
         <div class="admin-table-wrapper">
           <table class="admin-table" data-messages-table>
             <thead>
@@ -2935,10 +2843,10 @@
                 `;
                 const content = escapeHtml(record.message || rawFields.message || rawFields.gioi_thieu || record.note || record.service || rawFields.service || rawFields.vi_tri || record.position || "Không có nội dung");
                 const source = escapeHtml(record.type === "application" || record.type === "recruitment" ? "Ứng tuyển" : "Liên hệ");
-                const date = formatContactTimestamp(record.createdAt || "");
+                const date = formatContactTimestamp(record.createdAt || record.created_at || record.date || "");
                 const statusClass = record.seen ? "is-success" : "is-warning";
         const statusLabel = record.seen ? "Đã xem" : "Chưa xem";
-                
+
                 return `
                   <tr data-seen="${record.seen ? 'seen' : 'unseen'}">
                     <td>${index + 1}</td>
@@ -2974,6 +2882,24 @@
     `;
 
     setupTablePaginationAndFilters(editor, "[data-messages-table]", "[data-table-search-input]", "[data-table-filter-seen]", "data-seen");
+    const applyMobileMessageFilters = () => {
+      const query = (editor.querySelector("[data-table-search-input]")?.value || "").trim().toLowerCase();
+      const seenFilter = editor.querySelector("[data-table-filter-seen]")?.value || "";
+      const cards = Array.from(editor.querySelectorAll("[data-mobile-message-card]"));
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const matchesSeen = !seenFilter || card.dataset.seen === seenFilter;
+        const matchesQuery = !query || (card.dataset.search || "").includes(query);
+        const isVisible = matchesSeen && matchesQuery;
+        card.hidden = !isVisible;
+        if (isVisible) visibleCount += 1;
+      });
+      const empty = editor.querySelector("[data-mobile-message-empty]");
+      if (empty) empty.hidden = !cards.length || visibleCount > 0;
+    };
+    editor.querySelector("[data-table-search-input]")?.addEventListener("input", applyMobileMessageFilters);
+    editor.querySelector("[data-table-filter-seen]")?.addEventListener("change", applyMobileMessageFilters);
+    applyMobileMessageFilters();
   };
 
 
@@ -3009,7 +2935,7 @@
             <h2>${isCreating ? "Thêm mới" : "Chỉnh sửa"} sản phẩm</h2>
             <p class="admin-muted">Bản ghi: <strong>${escapeHtml(editingProduct.title)}</strong></p>
           </div>
-          <div class="admin-actions">
+          <div class="admin-actions admin-form-actions">
             <button class="admin-secondary-btn" type="button" data-back-to-list="products">Hủy</button>
             <button class="admin-primary-btn" type="button" data-submit-product-form>${isCreating ? "Lưu" : "Lưu thay đổi"}</button>
           </div>
@@ -3044,6 +2970,49 @@
       return;
     }
 
+    const mobileProductCards = records.length
+      ? records.map((product, index) => {
+          const productCategoryName = categoryName(product.category);
+          const statusText = product.active === false ? "Ẩn" : "Hiển thị";
+          const sortText = product.sortOrder || index + 1;
+          const createdText = formatDateTime(product.createdAt || product.created_at || "");
+          const searchText = [
+            product.title,
+            productCategoryName,
+            statusText,
+            sortText,
+            createdText,
+            product.description,
+            product.search
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          return `
+            <article class="admin-mobile-resource-card admin-mobile-product-card" data-mobile-product-card data-row-category="${escapeHtml(product.category || "")}" data-search="${escapeHtml(searchText)}">
+              <div class="admin-mobile-resource-main">
+                <img src="${escapeHtml(imageSrc(product.image))}" class="admin-mobile-resource-thumb" alt="${escapeHtml(product.title)}">
+                <div class="admin-mobile-resource-info">
+                  <strong>${escapeHtml(product.title)}</strong>
+                  <span>${escapeHtml(productCategoryName)}</span>
+                </div>
+                <span class="admin-badge ${product.active === false ? "is-gray" : "is-success"}">${statusText}</span>
+              </div>
+
+              <div class="admin-mobile-resource-meta">
+                <span>${escapeHtml(productCategoryName)}</span>
+                <span>Thứ tự ${escapeHtml(sortText)}</span>
+                <span>${createdText}</span>
+              </div>
+
+              <div class="admin-mobile-resource-actions">
+                <button class="admin-secondary-btn" type="button" data-edit-product="${index}">Sửa</button>
+                <button class="admin-secondary-btn" type="button" data-toggle-product="${index}">${product.active === false ? "Hiện" : "Ẩn"}</button>
+                <button class="admin-danger-btn" type="button" data-delete-product="${index}">Xóa</button>
+              </div>
+            </article>
+          `;
+        }).join("")
+      : `<div class="admin-empty-note admin-mobile-resource-empty">Chưa có sản phẩm nào.</div>`;
+
     editor.innerHTML = `
       <div class="admin-editor-head">
         <div>
@@ -3066,7 +3035,12 @@
         </div>
       </div>
 
-      <div class="admin-table-container">
+      <div class="admin-mobile-resource-list admin-mobile-product-list" data-mobile-product-list>
+        ${mobileProductCards}
+        <div class="admin-empty-note admin-mobile-resource-empty" data-mobile-product-empty hidden>Không tìm thấy sản phẩm phù hợp.</div>
+      </div>
+
+      <div class="admin-table-container admin-product-table-container">
         <div class="admin-table-wrapper">
           <table class="admin-table" data-products-table>
             <thead>
@@ -3127,6 +3101,24 @@
     `;
 
     setupTablePaginationAndFilters(editor, "[data-products-table]", "[data-table-search-input]", "[data-table-filter-category]", "data-row-category");
+    const applyMobileProductFilters = () => {
+      const query = (editor.querySelector("[data-table-search-input]")?.value || "").trim().toLowerCase();
+      const categoryFilter = editor.querySelector("[data-table-filter-category]")?.value || "";
+      const cards = Array.from(editor.querySelectorAll("[data-mobile-product-card]"));
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const matchesCategory = !categoryFilter || card.dataset.rowCategory === categoryFilter;
+        const matchesQuery = !query || (card.dataset.search || "").includes(query);
+        const isVisible = matchesCategory && matchesQuery;
+        card.hidden = !isVisible;
+        if (isVisible) visibleCount += 1;
+      });
+      const empty = editor.querySelector("[data-mobile-product-empty]");
+      if (empty) empty.hidden = !cards.length || visibleCount > 0;
+    };
+    editor.querySelector("[data-table-search-input]")?.addEventListener("input", applyMobileProductFilters);
+    editor.querySelector("[data-table-filter-category]")?.addEventListener("change", applyMobileProductFilters);
+    applyMobileProductFilters();
   };
 
   const renderProductForm = (product, index, categories) => `
@@ -3221,7 +3213,7 @@
             <h2>${isCreating ? "Thêm mới" : "Chỉnh sửa"} dịch vụ</h2>
             <p class="admin-muted">Bản ghi: <strong>${escapeHtml(editingService.title)}</strong></p>
           </div>
-          <div class="admin-actions">
+          <div class="admin-actions admin-form-actions">
             <button class="admin-secondary-btn" type="button" data-back-to-list="services">Hủy</button>
             <button class="admin-primary-btn" type="button" data-submit-service-form>${isCreating ? "Lưu" : "Lưu thay đổi"}</button>
           </div>
@@ -3250,6 +3242,45 @@
       return;
     }
 
+    const mobileServiceCards = records.length
+      ? records.map((service, index) => {
+          const statusText = service.active === false ? "Ẩn" : "Hiển thị";
+          const sortText = service.sortOrder || index + 1;
+          const searchText = [
+            service.title,
+            service.summary,
+            statusText,
+            sortText,
+            service.id,
+            service.description
+          ].filter(Boolean).join(" ").toLowerCase();
+
+          return `
+            <article class="admin-mobile-resource-card admin-mobile-service-card" data-mobile-service-card data-search="${escapeHtml(searchText)}">
+              <div class="admin-mobile-resource-main">
+                <img src="${escapeHtml(imageSrc(service.image))}" class="admin-mobile-resource-thumb" alt="${escapeHtml(service.title)}">
+                <div class="admin-mobile-resource-info">
+                  <strong>${escapeHtml(service.title)}</strong>
+                  <span>${escapeHtml(service.summary || service.id || "Dịch vụ")}</span>
+                </div>
+                <span class="admin-badge ${service.active === false ? "is-gray" : "is-success"}">${statusText}</span>
+              </div>
+
+              <div class="admin-mobile-resource-meta">
+                <span>Dịch vụ</span>
+                <span>Thứ tự ${escapeHtml(sortText)}</span>
+              </div>
+
+              <div class="admin-mobile-resource-actions">
+                <button class="admin-secondary-btn" type="button" data-edit-service="${index}">Sửa</button>
+                <button class="admin-secondary-btn" type="button" data-toggle-service="${index}">${service.active === false ? "Hiện" : "Ẩn"}</button>
+                <button class="admin-danger-btn" type="button" data-delete-service="${index}">Xóa</button>
+              </div>
+            </article>
+          `;
+        }).join("")
+      : `<div class="admin-empty-note admin-mobile-resource-empty">Chưa có dịch vụ nào.</div>`;
+
     editor.innerHTML = `
       <div class="admin-editor-head">
         <div>
@@ -3268,7 +3299,12 @@
         </div>
       </div>
 
-      <div class="admin-table-container">
+      <div class="admin-mobile-resource-list admin-mobile-service-list" data-mobile-service-list>
+        ${mobileServiceCards}
+        <div class="admin-empty-note admin-mobile-resource-empty" data-mobile-service-empty hidden>Không tìm thấy dịch vụ phù hợp.</div>
+      </div>
+
+      <div class="admin-table-container admin-service-table-container">
         <div class="admin-table-wrapper">
           <table class="admin-table" data-services-table>
             <thead>
@@ -3323,6 +3359,20 @@
     `;
 
     setupTablePaginationAndFilters(editor, "[data-services-table]", "[data-table-search-input]");
+    const applyMobileServiceFilters = () => {
+      const query = (editor.querySelector("[data-table-search-input]")?.value || "").trim().toLowerCase();
+      const cards = Array.from(editor.querySelectorAll("[data-mobile-service-card]"));
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const isVisible = !query || (card.dataset.search || "").includes(query);
+        card.hidden = !isVisible;
+        if (isVisible) visibleCount += 1;
+      });
+      const empty = editor.querySelector("[data-mobile-service-empty]");
+      if (empty) empty.hidden = !cards.length || visibleCount > 0;
+    };
+    editor.querySelector("[data-table-search-input]")?.addEventListener("input", applyMobileServiceFilters);
+    applyMobileServiceFilters();
   };
 
   const renderServiceForm = (service, index) => `
@@ -3654,10 +3704,10 @@
     const nextRecords = isNewRecord ? [nextRecord, ...records] : records.map((record, idx) => (idx === index ? nextRecord : record));
     const nextSectionRecords = nextRecords.map((record, idx) => ({ ...record, sortOrder: record.sortOrder || idx + 1 }));
     try {
-      await saveSectionData(key, nextSectionRecords, { 
-        action: isNewRecord ? "Thêm mới" : "Cập nhật", 
-        target: sections.find((item) => item.key === key)?.label || key, 
-        detail: nextRecord.title || nextRecord.name || nextRecord.id 
+      await saveSectionData(key, nextSectionRecords, {
+        action: isNewRecord ? "Thêm mới" : "Cập nhật",
+        target: sections.find((item) => item.key === key)?.label || key,
+        detail: nextRecord.title || nextRecord.name || nextRecord.id
       });
       status.textContent = `Đã lưu ${config.singular} vào ${saveDestinationText()}.`;
       status.style.color = "#138a5b";
@@ -3986,7 +4036,7 @@
                     <span class="admin-contact-status-dot"></span>
                   </div>
                 </div>
-                
+
                 <div class="admin-contact-info">
                   <strong class="admin-contact-name">${escapeHtml(contact.name)}</strong>
                   <div class="admin-contact-sub">
@@ -4030,9 +4080,9 @@
 
   const renderDashboardV2 = () => {
     data = getData();
-    const products = getLatestItems("products", 5);
+    const products = getLatestItems("products", 6);
     const messages = getLatestItems("contactMessages", 5);
-    const logs = activityLogs.slice(0, 6);
+    const logs = activityLogs.slice(0, 8);
 
     if (isInitialLoading) {
       editor.innerHTML = `
@@ -4145,7 +4195,7 @@
             <h3>Liên hệ mới nhất</h3>
             <button class="admin-link-btn" type="button" data-section-jump="contactMessages">Xem liên hệ</button>
           </div>
-          ${renderDashboardContactList(messages.slice(0, 4))}
+          ${renderDashboardContactList(messages)}
         </section>
 
         <section class="admin-dashboard-card admin-dashboard-card-products">
@@ -4817,6 +4867,7 @@
 
   const renderEditor = () => {
     const section = sections.find((item) => item.key === currentKey) || sections[0];
+    document.body.dataset.adminSection = section.key;
     const currentAdmin = getCurrentAdmin();
     const currentName = currentAdmin.name;
     const currentRole = currentAdmin.role;
@@ -4992,7 +5043,7 @@
   });
 
   setupGeneralModal();
-  
+
   // Render giao diện Skeleton Loader lập tức khi load trang
   render();
 

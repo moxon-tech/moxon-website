@@ -8,16 +8,16 @@
   --navy-900: #0f172a; /* Slate 900 */
   --navy-800: #1e293b; /* Slate 800 */
   --navy-700: #334155;
-  
+
   --green-500: #10b981; /* Premium Emerald */
   --green-600: #059669;
   --green-50: #ecfdf5;   /* Highlight nen nhat */
   --green-light: rgba(16, 185, 129, 0.12);
-  
+
   --red-500: #e53935; /* Danh rieng cho hotline tu van */
   --red-600: #c62828;
   --red-light: rgba(229, 57, 53, 0.12);
-  
+
   --gray-950: #0f172a;
   --gray-700: #475569; /* Slate 600 */
   --gray-600: #64748b;
@@ -27,23 +27,23 @@
   --gray-120: #f1f5f9; /* Slate 100 */
   --gray-50: #f8fafc;  /* Slate 50 - nen chinh */
   --white: #ffffff;
-  
+
   /* Glassmorphism & Borders */
   --card-bg: #ffffff;
   --card-bg-hover: #ffffff;
   --card-border: rgba(15, 23, 42, 0.08);
   --card-border-hover: rgba(16, 185, 129, 0.35);
-  
+
   /* Shadows */
   --shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
   --shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
   --shadow-strong: 0 20px 40px -6px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
-  
+
   /* Radii */
   --radius: 12px;
   --radius-lg: 16px;
   --radius-sm: 6px;
-  
+
   /* Spacing & Typography - Fluid Scale */
   --masthead-height: 80px;
   --page-x: clamp(16px, 5vw, 96px); /* Le trang linh hoat hon, khong an qua nhieu tren mobile */
@@ -232,8 +232,8 @@ a {
   padding: 6px 18px;
   border-radius: 100px;
   border: 1.5px solid var(--white);
-  box-shadow: 
-    0 0 0 1px #cbd5e1, 
+  box-shadow:
+    0 0 0 1px #cbd5e1,
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     0 4px 10px rgba(229, 57, 53, 0.3);
   text-decoration: none;
@@ -244,8 +244,8 @@ a {
 
 .header-cta-split:hover {
   transform: translateY(-1.5px);
-  box-shadow: 
-    0 0 0 1px #cbd5e1, 
+  box-shadow:
+    0 0 0 1px #cbd5e1,
     inset 0 1.5px 0 rgba(255, 255, 255, 0.45),
     0 6px 16px rgba(229, 57, 53, 0.45);
 }
@@ -525,19 +525,19 @@ textarea {
   padding: 6px 18px;
   min-height: 42px;
   border-radius: 100px;
-  
+
   /* 3D Glossy Red Gradient */
   background: linear-gradient(180deg, #ff4d4d 0%, #e53935 45%, #b71c1c 100%);
-  
+
   /* Silver Metallic Chrome Border and Shadow Glow */
   border: 2px solid #f3f4f6;
-  box-shadow: 
+  box-shadow:
     0 0 0 1px #9ca3af, /* Outer thin silver line */
     inset 0 1.5px 0 rgba(255, 255, 255, 0.4), /* Top inner highlight */
     inset 0 -1.5px 0 rgba(0, 0, 0, 0.2), /* Bottom inner shadow */
     0 4px 14px rgba(229, 57, 53, 0.4), /* Red glow */
     0 2px 4px rgba(0, 0, 0, 0.1);
-    
+
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
@@ -545,7 +545,7 @@ textarea {
 
 .header-cta:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 
+  box-shadow:
     0 0 0 1.5px #d1d5db,
     inset 0 2px 0 rgba(255, 255, 255, 0.5),
     0 8px 24px rgba(229, 57, 53, 0.55);
@@ -2323,7 +2323,7 @@ body[data-page="recruitment"] .form-note {
   .brand {
     min-width: 200px;
   }
-  
+
   .brand-text strong {
     font-size: 1.15rem;
   }
@@ -2335,7 +2335,7 @@ body[data-page="recruitment"] .form-note {
   .footer-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .map-embed {
     grid-column: span 2;
   }
@@ -2344,7 +2344,7 @@ body[data-page="recruitment"] .form-note {
   .project-home-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .cta-band {
     padding: 40px;
   }
@@ -2363,47 +2363,47 @@ body[data-page="recruitment"] .form-note {
   .header-top-inner {
     padding: 8px var(--page-x);
   }
-  
+
   .brand-logo-split {
     width: 68px;
     height: 40px;
   }
-  
+
   .brand-name-split {
     font-size: 0.92rem;
   }
-  
+
   .brand-tagline-split {
     font-size: 0.65rem;
     margin-top: 1px;
   }
-  
+
   .brand-contact-split {
     display: none;
   }
-  
+
   .header-cta-split {
     min-height: 34px;
     padding: 4px 10px;
   }
-  
+
   .cta-split-label {
     font-size: 7.5px;
   }
-  
+
   .cta-split-phone {
     font-size: 0.78rem;
   }
-  
+
   .header-bottom-inner {
     justify-content: flex-end;
     padding-block: 6px;
   }
-  
+
   .menu-toggle {
     display: block;
   }
-  
+
   .main-nav {
     display: none;
     position: absolute;
@@ -2418,11 +2418,11 @@ body[data-page="recruitment"] .form-note {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     border: 0;
   }
-  
+
   .main-nav.is-open {
     display: flex;
   }
-  
+
   .main-nav a {
     color: rgba(255, 255, 255, 0.95) !important;
     padding: 12px 0;
@@ -2430,21 +2430,21 @@ body[data-page="recruitment"] .form-note {
     border-right: 0;
     font-size: 0.85rem;
   }
-  
+
   .main-nav a:first-child {
     border-left: 0;
   }
-  
+
   .main-nav a:last-child {
     border-bottom: 0;
   }
-  
+
   .main-nav a:hover,
   .main-nav a.is-active {
     background: transparent;
     color: var(--white) !important;
   }
-  
+
   .main-nav a.is-active::after {
     display: none;
   }
@@ -2482,7 +2482,7 @@ body[data-page="recruitment"] .form-note {
     padding: 32px;
     margin-inline: var(--page-x);
   }
-  
+
   .cta-band .button-primary {
     width: 100%;
   }
@@ -2557,7 +2557,7 @@ body[data-page="recruitment"] .form-note {
     margin-inline: 12px;
     padding: 24px 16px;
   }
-  
+
   .footer-grid {
     padding-block: 40px 24px;
   }
@@ -4905,13 +4905,13 @@ body.animations-ready .hero .reveal-fade-up {
     grid-template-columns: 1fr;
     gap: 32px;
   }
-  
+
   .home-sidebar {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
-  
+
   /* Hide minor sidebar widgets on tablets */
   .sidebar-widget.commit-widget,
   .sidebar-widget.video-widget {
@@ -13768,5 +13768,202 @@ body[data-page="contact"] .quote-form .button[type="submit"]:hover {
   body[data-page="contact"] .contact-map {
     min-height: 0 !important;
     aspect-ratio: auto !important;
+  }
+}
+
+/* Final public mobile overrides: larger Facebook mark and tighter home product cards. */
+@media (max-width: 760px) {
+  .floating-facebook .facebook-badge-text {
+    font-size: 1.9rem !important;
+    transform: translateY(0);
+  }
+
+  body[data-page="home"] .product-item-card-body {
+    justify-content: flex-start !important;
+    flex-grow: 0 !important;
+    min-height: 0 !important;
+    padding: 8px 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  body[data-page="home"] .product-item-card-body h4,
+  body[data-page="home"] .product-item-card h4 {
+    min-height: 28px !important;
+    margin: 0 !important;
+    font-size: 0.8rem !important;
+    line-height: 1.18 !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+
+  body[data-page="home"] .product-card-cta-btn {
+    margin-top: 0 !important;
+    padding: 8px 12px !important;
+  }
+
+  body[data-page="home"] .product-row-grid-scrollable {
+    align-items: flex-start !important;
+  }
+
+  body[data-page="home"] .product-item-card {
+    height: auto !important;
+    align-self: flex-start !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .floating-facebook .facebook-badge-text {
+    font-size: 2rem !important;
+  }
+
+  body[data-page="home"] .product-item-card-body h4,
+  body[data-page="home"] .product-item-card h4 {
+    min-height: 26px !important;
+  }
+}
+
+/* Final public mobile typography: keep compact labels readable without changing desktop. */
+@media (max-width: 760px) {
+  .section-kicker,
+  .hero-kicker,
+  .floating-btn span,
+  .floating-btn small {
+    font-size: max(0.78rem, 12.5px) !important;
+    line-height: 1.25 !important;
+  }
+
+  .masthead-split .brand-tagline-split,
+  .cta-split-label {
+    font-size: max(0.72rem, 11.5px) !important;
+    line-height: 1.18 !important;
+  }
+}
+
+/* Final products mobile layout: compact cards, two columns when the screen has room. */
+@media (max-width: 760px) {
+  body[data-page="products"] .catalog-product-grid {
+    grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  body[data-page="products"] .catalog-product-card {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    contain-intrinsic-size: auto !important;
+    grid-template-columns: none !important;
+    flex-direction: column !important;
+    justify-self: stretch !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-item-img {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    aspect-ratio: 4 / 3 !important;
+    border-radius: 0 !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-item-img img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-item-body {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 112px !important;
+    align-content: initial !important;
+    align-items: center !important;
+    justify-items: initial !important;
+    justify-content: flex-start !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 14px 10px 16px !important;
+    text-align: center !important;
+  }
+
+  body[data-page="products"] .catalog-product-card h3 {
+    min-height: 38px !important;
+    margin: 0 !important;
+    color: var(--navy-900) !important;
+    font-size: 0.86rem !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+  }
+
+  body[data-page="products"] .catalog-product-meta,
+  body[data-page="products"] .catalog-product-desc {
+    display: none !important;
+  }
+
+  body[data-page="products"] .catalog-product-actions {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-top: 0 !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-detail-btn,
+  body[data-page="products"] .catalog-product-card .price-contact {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 36px !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 0.76rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  body[data-page="products"] .catalog-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body[data-page="products"] .catalog-product-card {
+    width: 100% !important;
+    grid-template-columns: none !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-item-img {
+    min-height: 0 !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-item-body {
+    min-height: 104px !important;
+    gap: 10px !important;
+    padding: 12px 8px 14px !important;
+  }
+
+  body[data-page="products"] .catalog-product-card h3 {
+    min-height: 36px !important;
+    font-size: 0.78rem !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-detail-btn,
+  body[data-page="products"] .catalog-product-card .price-contact {
+    min-height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.7rem !important;
+  }
+}
+
+@media (max-width: 340px) {
+  body[data-page="products"] .catalog-product-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body[data-page="products"] .catalog-product-card {
+    width: min(100%, 280px) !important;
+    justify-self: center !important;
   }
 }
