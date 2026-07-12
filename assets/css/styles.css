@@ -13967,3 +13967,41 @@ body[data-page="contact"] .quote-form .button[type="submit"]:hover {
     justify-self: center !important;
   }
 }
+
+/* Final products desktop hover: match homepage product-card motion. */
+@media (hover: hover) and (pointer: fine) and (min-width: 761px) {
+  body[data-page="products"] .catalog-product-card {
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-soft) !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  body[data-page="products"] .catalog-product-card::after {
+    display: none !important;
+  }
+
+  body[data-page="products"] .catalog-product-card:hover {
+    transform: translateY(-5px) !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+    box-shadow: var(--shadow-strong) !important;
+  }
+
+  body[data-page="products"] .catalog-product-card .product-item-img img {
+    transition: transform 0.45s ease !important;
+  }
+
+  body[data-page="products"] .catalog-product-card:hover .product-item-img img {
+    transform: scale(1.04) !important;
+    filter: none !important;
+  }
+
+  body[data-page="products"] .catalog-product-card h3 {
+    transition: color 0.25s ease !important;
+  }
+
+  body[data-page="products"] .catalog-product-card:hover h3 {
+    color: var(--green-500) !important;
+  }
+
+}
