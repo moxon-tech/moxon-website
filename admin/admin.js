@@ -29,6 +29,7 @@
     "brand",
     "aboutPage",
     "recruitmentNotice",
+    "notificationSettings",
     "banners",
     "partners",
     "services",
@@ -71,6 +72,7 @@
     { key: "brand", label: "Nhận diện", type: "object", summary: "Kênh" },
     { key: "aboutPage", label: "Trang giới thiệu", type: "object", summary: "Nội dung" },
     { key: "recruitmentNotice", label: "Thông báo tuyển dụng", type: "object", summary: "Nội dung" },
+    { key: "notificationSettings", label: "Email thông báo", type: "object", summary: "Email" },
     { key: "banners", label: "Banner", type: "array", summary: "banner" },
     { key: "partners", label: "Thương hiệu", type: "array", summary: "Đối tác" },
     { key: "productCategories", label: "Danh mục", type: "array", summary: "Nhóm" },
@@ -1673,6 +1675,7 @@
     brand: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path></svg>`,
     aboutPage: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"></path><path d="M7 3v18"></path><path d="M14 3v18"></path><path d="M3 15h18"></path></svg>`,
     recruitmentNotice: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
+    notificationSettings: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="m22 6-10 7L2 6"></path><path d="M18 2v4"></path><path d="M20 4h-4"></path></svg>`,
     banners: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`,
     partners: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
     productCategories: `<svg class="admin-nav-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
@@ -1774,7 +1777,7 @@
       },
       {
         label: "Khách hàng & Đối tác",
-        keys: ["contactMessages", "partners"]
+        keys: ["contactMessages", "notificationSettings", "partners"]
       }
     ];
 
@@ -1876,6 +1879,11 @@
   };
 
   const renderObjectEditor = (section) => {
+    if (section.key === "notificationSettings") {
+      renderNotificationSettingsEditor(section);
+      return;
+    }
+
     if (section.key === "aboutPage") {
       renderAboutPageEditor(section);
       return;
@@ -1892,6 +1900,91 @@
         <h3>Chưa có form quản lý cho mục này</h3>
         <p>Mục này chưa cấu hình trực tiếp trên giao diện. Các nội dung thường dùng đã được tách thành form riêng ở menu bên trái.</p>
       </div>
+    `;
+  };
+
+  const normalizeRecipientList = (value) => {
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item || "").trim()).filter(Boolean);
+    }
+    return String(value || "")
+      .split(/[\n,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+
+  const renderNotificationSettingsEditor = (section) => {
+    const value = data.notificationSettings || {};
+    const groups = [
+      {
+        key: "sharedRecipients",
+        title: "Email nhận cả liên hệ và tuyển dụng",
+        addLabel: "Thêm email nhận cả hai"
+      },
+      {
+        key: "contactRecipients",
+        title: "Email chỉ nhận thông báo liên hệ",
+        addLabel: "Thêm email liên hệ"
+      },
+      {
+        key: "recruitmentRecipients",
+        title: "Email chỉ nhận thông báo tuyển dụng",
+        addLabel: "Thêm email tuyển dụng"
+      }
+    ];
+    const renderRecipientRows = (group) => {
+      const recipients = normalizeRecipientList(value[group.key]);
+      if (!recipients.length) {
+        return `<p class="admin-empty-note">Chưa có email nào. Nhấn ${escapeHtml(group.addLabel)} để thêm.</p>`;
+      }
+      return recipients
+        .map(
+          (email, index) => `
+            <div class="admin-email-recipient-row" data-email-row="${group.key}" data-row-index="${index}">
+              <label>
+                Email
+                <input type="email" data-email-field="${group.key}" value="${escapeHtml(email)}">
+              </label>
+              <button class="admin-danger-btn admin-small-btn" type="button" data-remove-email-row="${group.key}">Xóa</button>
+            </div>
+          `
+        )
+        .join("");
+    };
+
+    editor.innerHTML = `
+      <div class="admin-editor-head">
+        <div>
+          <p class="admin-kicker">${section.label}</p>
+          <h2>Cấu hình email nhận thông báo</h2>
+          <p class="admin-muted">Mỗi ô là một email. Có thể thêm nhiều email cho từng nhóm nhận thông báo.</p>
+        </div>
+        <button class="admin-primary-btn admin-form-save-action" type="button" data-save-form>Lưu thay đổi</button>
+      </div>
+      <form class="admin-form admin-structured-form" data-notification-settings-form>
+        <div class="admin-form-grid">
+          <label class="admin-checkbox-field admin-field-wide">
+            <input type="checkbox" data-notification-enabled ${value.enabled !== false ? "checked" : ""}>
+            <span>Bật gửi email thông báo</span>
+          </label>
+        </div>
+        ${groups
+          .map(
+            (group) => `
+              <section class="admin-repeat-section admin-email-recipient-section" data-email-group="${group.key}">
+                <div class="admin-repeat-header">
+                  <h3>${escapeHtml(group.title)}</h3>
+                  <button type="button" class="admin-secondary-btn" data-add-email-row="${group.key}">${escapeHtml(group.addLabel)}</button>
+                </div>
+                <div class="admin-repeat-group" data-email-group-rows="${group.key}">
+                  ${renderRecipientRows(group)}
+                </div>
+              </section>
+            `
+          )
+          .join("")}
+        <p class="admin-form-status" data-editor-status aria-live="polite"></p>
+      </form>
     `;
   };
 
@@ -2131,6 +2224,45 @@
       status.textContent = error.message || "Lỗi lưu cấu hình.";
       status.style.color = "#c0392b";
       showToast("Không lưu được cấu hình!", "error");
+    }
+  };
+
+  const syncNotificationSettingsForm = async (section) => {
+    const status = getEditorStatus();
+    const readGroup = (key) =>
+      Array.from(editor.querySelectorAll(`[data-email-field="${key}"]`))
+        .map((input) => input.value.trim())
+        .filter(Boolean);
+    const nextValue = {
+      enabled: editor.querySelector("[data-notification-enabled]")?.checked !== false,
+      sharedRecipients: readGroup("sharedRecipients"),
+      contactRecipients: readGroup("contactRecipients"),
+      recruitmentRecipients: readGroup("recruitmentRecipients")
+    };
+    const invalidEmail = [
+      ...nextValue.sharedRecipients,
+      ...nextValue.contactRecipients,
+      ...nextValue.recruitmentRecipients
+    ].find((email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+
+    if (invalidEmail) {
+      status.textContent = `Email không hợp lệ: ${invalidEmail}`;
+      status.style.color = "#c0392b";
+      showToast("Có email chưa đúng định dạng.", "error");
+      return;
+    }
+
+    try {
+      await saveSectionData(section.key, nextValue, { action: "Cập nhật", target: section.label, detail: "Email nhận thông báo form" });
+      status.textContent = `Đã lưu thay đổi vào ${saveDestinationText()}.`;
+      status.style.color = "#138a5b";
+      showToast("Đã lưu cấu hình email thông báo!", "success");
+      renderSummary();
+      renderEditor();
+    } catch (error) {
+      status.textContent = error.message || "Lỗi lưu cấu hình email.";
+      status.style.color = "#c0392b";
+      showToast("Không lưu được cấu hình email!", "error");
     }
   };
 
@@ -3437,7 +3569,8 @@
     const objectUpdateDetails = {
       company: "Thông tin công ty, liên hệ và bản đồ",
       brand: "Logo, favicon, khẩu hiệu và kênh mạng xã hội",
-      recruitmentNotice: "Thông báo đầu trang tuyển dụng"
+      recruitmentNotice: "Thông báo đầu trang tuyển dụng",
+      notificationSettings: "Email nhận thông báo form"
     };
 
     editor.querySelectorAll("[data-field]").forEach((field) => {
@@ -4254,6 +4387,8 @@
       const form = section.key === "aboutPage" ? editor.querySelector("[data-about-page-form]") : editor.querySelector(".admin-structured-form");
       if (section.key === "aboutPage") {
         runFormSave(form, () => syncAboutPageForm(section));
+      } else if (section.key === "notificationSettings") {
+        runFormSave(form, () => syncNotificationSettingsForm(section));
       } else {
         runFormSave(form, () => syncFromObjectForm(section));
       }
@@ -4512,6 +4647,50 @@
           showToast("Đã cập nhật trạng thái yêu cầu!", "success");
         }, { errorMessage: "Không cập nhật được trạng thái liên hệ." });
       };
+    });
+
+    editor.querySelectorAll("[data-add-email-row]").forEach((button) => {
+      button.onclick = () => {
+        const group = button.dataset.addEmailRow;
+        const container = editor.querySelector(`[data-email-group-rows="${group}"]`);
+        if (!container) return;
+        const rowCount = container.querySelectorAll("[data-email-row]").length;
+        container.querySelectorAll(".admin-empty-note").forEach((note) => note.remove());
+        container.insertAdjacentHTML(
+          "beforeend",
+          `
+            <div class="admin-email-recipient-row" data-email-row="${group}" data-row-index="${rowCount}">
+              <label>
+                Email
+                <input type="email" data-email-field="${group}" value="">
+              </label>
+              <button class="admin-danger-btn admin-small-btn" type="button" data-remove-email-row="${group}">Xóa</button>
+            </div>
+          `
+        );
+        const newRow = container.querySelector(`[data-email-row="${group}"][data-row-index="${rowCount}"]`);
+        newRow?.querySelector("input")?.focus();
+        const removeButton = newRow?.querySelector("[data-remove-email-row]");
+        if (removeButton) removeButton.onclick = () => removeEmailRecipientRow(removeButton);
+        showToast("Đã thêm email vào danh sách. Bấm Lưu thay đổi để áp dụng.", "info");
+      };
+    });
+
+    const removeEmailRecipientRow = (button) => {
+      const row = button.closest("[data-email-row]");
+      const group = button.dataset.removeEmailRow || row?.dataset.emailRow;
+      const container = row?.closest("[data-email-group-rows]");
+      row?.remove();
+      if (container && !container.querySelector("[data-email-row]")) {
+        const addButton = editor.querySelector(`[data-add-email-row="${group}"]`);
+        const addLabel = addButton?.textContent?.trim() || "Thêm email";
+        container.insertAdjacentHTML("beforeend", `<p class="admin-empty-note">Chưa có email nào. Nhấn ${escapeHtml(addLabel)} để thêm.</p>`);
+      }
+      showToast("Đã xóa email khỏi danh sách. Bấm Lưu thay đổi để áp dụng.", "info");
+    };
+
+    editor.querySelectorAll("[data-remove-email-row]").forEach((button) => {
+      button.onclick = () => removeEmailRecipientRow(button);
     });
 
     editor.querySelectorAll("[data-view-message]").forEach((button) => {

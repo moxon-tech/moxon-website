@@ -2146,8 +2146,21 @@ a.admin-secondary-btn {
   opacity: 1;
 }
 
+.admin-toast > span:first-child {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
 .admin-toast.is-success {
   border-left-color: var(--accent-green);
+  color: #166534;
   background: rgba(240, 253, 244, 0.95);
 }
 
@@ -2159,6 +2172,7 @@ a.admin-secondary-btn {
 
 .admin-toast.is-info {
   border-left-color: var(--accent-blue);
+  color: #1d4ed8;
   background: rgba(239, 246, 255, 0.95);
 }
 
@@ -4296,6 +4310,25 @@ a.admin-secondary-btn {
   justify-self: end;
 }
 
+.admin-email-recipient-section {
+  box-shadow: none;
+}
+
+.admin-email-recipient-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.admin-email-recipient-row .admin-danger-btn {
+  margin-bottom: 2px;
+}
+
 .admin-empty-note {
   margin: 0;
   padding: 12px;
@@ -4364,6 +4397,15 @@ a.admin-secondary-btn {
   .admin-repeat-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-email-recipient-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-email-recipient-row .admin-danger-btn {
+    justify-self: flex-start;
+    margin-bottom: 0;
   }
 
   .admin-summary-grid {

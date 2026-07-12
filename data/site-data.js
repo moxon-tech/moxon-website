@@ -44,6 +44,12 @@ window.MOXON_DATA = {
       "Ứng viên quan tâm có thể gửi trước thông tin cá nhân, vị trí mong muốn và CV. Hồ sơ sẽ được lưu lại để MOXON xem xét khi phát sinh nhu cầu phù hợp.",
     active: true
   },
+  notificationSettings: {
+    enabled: true,
+    sharedRecipients: ["moxontech.vn@gmail.com"],
+    contactRecipients: [],
+    recruitmentRecipients: []
+  },
   banners: [],
   partners: [],
   productCategories: [],
