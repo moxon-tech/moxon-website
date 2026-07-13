@@ -125,6 +125,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
+  const notifyManagedMessage = async (client, messageRecord) => {
+    if (!client?.functions?.invoke) return;
+    try {
+      const { error } = await client.functions.invoke("notify-form-submission", {
+        body: {
+          message: messageRecord
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.warn("Khong gui duoc email thong bao, du lieu form da duoc luu.", error);
+    }
+  };
+
   const saveManagedMessage = async (form, type) => {
     const formData = new FormData(form);
     const fields = {};
@@ -207,6 +221,8 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("Không lưu được liên hệ vào Supabase.", error);
       throw new Error("Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c th\u00f4ng tin l\u00ean h\u1ec7 th\u1ed1ng. Vui l\u00f2ng th\u1eed l\u1ea1i sau ho\u1eb7c li\u00ean h\u1ec7 tr\u1ef1c ti\u1ebfp qua hotline.");
     }
+
+    await notifyManagedMessage(client, messageRecord);
   };
 
   // 1. Form Submission Feedback Handling
