@@ -33,6 +33,23 @@ type MessagePayload = {
   rawFields?: Record<string, unknown>;
 };
 
+type ContactMessageRow = {
+  id: string;
+  type?: string;
+  title?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
+  company?: string;
+  service?: string;
+  message?: string;
+  attachment?: string;
+  attachment_data?: string;
+  created_at?: string;
+  notified_at?: string | null;
+  raw_fields?: Record<string, unknown>;
+};
+
 const jsonResponse = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -74,32 +91,78 @@ const readKeyFromJsonEnv = (name: string) => {
   }
 };
 
-const getSupabaseApiKey = () => {
-  const secretKey = readKeyFromJsonEnv("SUPABASE_SECRET_KEYS") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  if (secretKey) return secretKey;
+const getSupabaseApiKey = () =>
+  readKeyFromJsonEnv("SUPABASE_SECRET_KEYS") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-  const publishableKey =
-    readKeyFromJsonEnv("SUPABASE_PUBLISHABLE_KEYS") ||
-    Deno.env.get("SUPABASE_ANON_KEY") ||
-    Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ||
-    "";
+const getSupabaseRestConfig = () => {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const apiKey = getSupabaseApiKey();
+  if (!supabaseUrl || !apiKey) {
+    throw new Error("Missing Supabase server credentials");
+  }
+  return { supabaseUrl, apiKey };
+};
 
-  return publishableKey;
+const supabaseHeaders = (apiKey: string, extra: Record<string, string> = {}) => ({
+  apikey: apiKey,
+  Authorization: `Bearer ${apiKey}`,
+  Accept: "application/json",
+  ...extra
+});
+
+const mapContactMessage = (row: ContactMessageRow): MessagePayload => ({
+  id: row.id,
+  type: row.type || "contact",
+  title: row.title || "",
+  name: row.name || "",
+  phone: row.phone || "",
+  email: row.email || "",
+  company: row.company || "",
+  service: row.service || "",
+  message: row.message || "",
+  attachment: row.attachment || "",
+  attachmentData: row.attachment_data || "",
+  createdAt: row.created_at || "",
+  rawFields: row.raw_fields || {}
+});
+
+const getContactMessage = async (messageId: string): Promise<ContactMessageRow | null> => {
+  const { supabaseUrl, apiKey } = getSupabaseRestConfig();
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/contact_messages?id=eq.${encodeURIComponent(messageId)}&select=*&limit=1`,
+    { headers: supabaseHeaders(apiKey) }
+  );
+  if (!response.ok) throw new Error(`Cannot load contact message: ${response.status}`);
+  const rows = await response.json();
+  return rows?.[0] || null;
+};
+
+const setNotificationClaim = async (messageId: string, notifiedAt: string | null) => {
+  const { supabaseUrl, apiKey } = getSupabaseRestConfig();
+  const notifiedFilter = notifiedAt ? "&notified_at=is.null" : "";
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/contact_messages?id=eq.${encodeURIComponent(messageId)}${notifiedFilter}`,
+    {
+      method: "PATCH",
+      headers: supabaseHeaders(apiKey, {
+        "Content-Type": "application/json",
+        Prefer: "return=representation"
+      }),
+      body: JSON.stringify({ notified_at: notifiedAt })
+    }
+  );
+  if (!response.ok) throw new Error(`Cannot update notification state: ${response.status}`);
+  const rows = await response.json();
+  return Array.isArray(rows) && rows.length > 0;
 };
 
 const getNotificationSettings = async (): Promise<NotificationSettings> => {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const apiKey = getSupabaseApiKey();
-  if (!supabaseUrl || !apiKey) return {};
+  const { supabaseUrl, apiKey } = getSupabaseRestConfig();
 
   const response = await fetch(
     `${supabaseUrl}/rest/v1/cms_sections?section_key=eq.notificationSettings&select=section_value&limit=1`,
     {
-      headers: {
-        apikey: apiKey,
-        Authorization: `Bearer ${apiKey}`,
-        Accept: "application/json"
-      }
+      headers: supabaseHeaders(apiKey)
     }
   );
 
@@ -211,7 +274,20 @@ export default {
     }
 
     const payload = await request.json();
-    const message = (payload?.message || {}) as MessagePayload;
+    const messageId = textValue(payload?.messageId);
+    if (!/^(contact|application)-\d{10,20}$/.test(messageId)) {
+      return jsonResponse({ error: "Invalid messageId" }, 400);
+    }
+
+    const messageRow = await getContactMessage(messageId);
+    if (!messageRow) {
+      return jsonResponse({ error: "Message not found" }, 404);
+    }
+    if (messageRow.notified_at) {
+      return jsonResponse({ ok: true, skipped: true, reason: "Already notified" });
+    }
+
+    const message = mapContactMessage(messageRow);
     const type = message.type === "application" ? "application" : "contact";
     const settings = await getNotificationSettings();
     const recipients = getRecipientsForType(settings, type);
@@ -220,31 +296,44 @@ export default {
       return jsonResponse({ ok: true, skipped: true, reason: "No recipients configured" });
     }
 
+    const claimedAt = new Date().toISOString();
+    const claimed = await setNotificationClaim(messageId, claimedAt);
+    if (!claimed) {
+      return jsonResponse({ ok: true, skipped: true, reason: "Already notified" });
+    }
+
     const subject =
       type === "application"
         ? `MOXON - Ứng tuyển mới${message.name ? ` từ ${message.name}` : ""}`
         : `MOXON - Liên hệ mới${message.name ? ` từ ${message.name}` : ""}`;
 
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from,
-        to: recipients,
-        subject,
-        html: buildHtml({ ...message, type }, adminUrl),
-        text: buildText({ ...message, type }, adminUrl),
-        reply_to: message.email || undefined
-      })
-    });
+    let response: Response;
+    try {
+      response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          from,
+          to: recipients,
+          subject,
+          html: buildHtml({ ...message, type }, adminUrl),
+          text: buildText({ ...message, type }, adminUrl),
+          reply_to: message.email || undefined
+        })
+      });
+    } catch (error) {
+      await setNotificationClaim(messageId, null).catch(() => undefined);
+      throw error;
+    }
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       console.error("Resend error", response.status, result);
-      return jsonResponse({ error: "Cannot send email", details: result }, 502);
+      await setNotificationClaim(messageId, null).catch(() => undefined);
+      return jsonResponse({ error: "Cannot send email" }, 502);
     }
 
     return jsonResponse({ ok: true, id: result?.id || null, recipients: recipients.length });

@@ -33,6 +33,7 @@ create table if not exists public.contact_messages (
   seen boolean not null default false,
   active boolean not null default true,
   sort_order integer not null default 0,
+  notified_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -78,6 +79,10 @@ alter table public.contact_messages enable row level security;
 alter table public.admin_activity_logs enable row level security;
 alter table public.product_categories enable row level security;
 alter table public.products enable row level security;
+
+-- Email notifications are claimed by the server-side Edge Function only.
+alter table if exists public.contact_messages
+  add column if not exists notified_at timestamptz;
 
 grant usage on schema public to anon, authenticated;
 grant select on table public.cms_sections to anon, authenticated;

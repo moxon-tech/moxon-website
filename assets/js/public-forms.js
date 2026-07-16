@@ -125,12 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
-  const notifyManagedMessage = async (client, messageRecord) => {
+  const notifyManagedMessage = async (client, messageId) => {
     if (!client?.functions?.invoke) return;
     try {
       const { error } = await client.functions.invoke("notify-form-submission", {
         body: {
-          message: messageRecord
+          messageId
         }
       });
       if (error) throw error;
@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
       throw new Error("Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c th\u00f4ng tin l\u00ean h\u1ec7 th\u1ed1ng. Vui l\u00f2ng th\u1eed l\u1ea1i sau ho\u1eb7c li\u00ean h\u1ec7 tr\u1ef1c ti\u1ebfp qua hotline.");
     }
 
-    await notifyManagedMessage(client, messageRecord);
+    await notifyManagedMessage(client, messageRecord.id);
   };
 
   // 1. Form Submission Feedback Handling
