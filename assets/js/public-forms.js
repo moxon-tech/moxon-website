@@ -5,6 +5,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const MAX_PUBLIC_ATTACHMENT_SIZE = 8 * 1024 * 1024;
+  const MIN_MANAGED_FORM_FILL_TIME_MS = 2000;
+  const managedFormStartedAt = new WeakMap();
   const ALLOWED_PUBLIC_ATTACHMENT_EXTENSIONS = new Set([
     "pdf",
     "dwg",
@@ -275,6 +277,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  document.querySelectorAll("#quote, #apply-form").forEach((form) => {
+    managedFormStartedAt.set(form, Date.now());
+  });
+
   document.querySelectorAll("input[type='tel']").forEach((input) => {
     input.addEventListener("input", () => {
       input.setCustomValidity("");
@@ -313,6 +319,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const originalButtonText = button?.textContent || "";
       const phoneValue = phoneInput?.value.trim() || "";
       const emailValue = emailInput?.value.trim() || "";
+
+      if (isManagedForm) {
+        const honeypotValue = form.querySelector("[data-form-honeypot]")?.value.trim() || "";
+        const startedAt = managedFormStartedAt.get(form) || Date.now();
+        const fillTime = Date.now() - startedAt;
+
+        if (honeypotValue) {
+          event.preventDefault();
+          showFormError(form, "Kh\u00f4ng th\u1ec3 g\u1eedi bi\u1ec3u m\u1eabu n\u00e0y. Vui l\u00f2ng t\u1ea3i l\u1ea1i trang v\u00e0 th\u1eed l\u1ea1i.");
+          return;
+        }
+
+        if (fillTime < MIN_MANAGED_FORM_FILL_TIME_MS) {
+          event.preventDefault();
+          showFormError(form, "Vui l\u00f2ng ki\u1ec3m tra l\u1ea1i th\u00f4ng tin tr\u01b0\u1edbc khi g\u1eedi.");
+          return;
+        }
+      }
 
       if (isManagedForm && !phoneValue && !emailValue) {
         event.preventDefault();
@@ -362,6 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
             : "C\u1ea3m \u01a1n b\u1ea1n. MOXON \u0111\u00e3 ti\u1ebfp nh\u1eadn th\u00f4ng tin li\u00ean h\u1ec7 t\u01b0 v\u1ea5n."
         );
         form.reset();
+        managedFormStartedAt.set(form, Date.now());
         setTimeout(() => {
           if (button) {
             button.textContent = originalButtonText || "G\u1eedi";
